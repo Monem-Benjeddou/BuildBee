@@ -3,32 +3,30 @@ import {
   Box,
   Typography,
   Button,
-  TextField,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
+  Avatar,
   IconButton,
   Tooltip,
-  Avatar,
+  Checkbox,
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  CalendarToday,
+  DeleteSweep as DeleteSweepIcon,
 } from '@mui/icons-material';
-import { students as initialRows, groups } from '../../data/students';
+import { students as initialRows } from '../../data/students';
+import StudentFormDialog from '../../components/StudentFormDialog';
+import StudentProfileDialog from '../../components/StudentProfileDialog';
+import { getGroupColor } from '../../utils/colors';
 
 const StudentList = () => {
   const [rows, setRows] = useState(initialRows);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [openProfile, setOpenProfile] = useState(false);
+  const [selectionModel, setSelectionModel] = useState([]);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -37,35 +35,30 @@ const StudentList = () => {
   });
 
   const handleOpenDialog = () => {
-    setOpenDialog(true);
-  };
-
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
-    setEditingStudent(null);
     setFormData({
       firstName: '',
       lastName: '',
       group: '',
       birthDate: '',
     });
+    setEditingStudent(null);
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setEditingStudent(null);
   };
 
   const handleEdit = (student) => {
-    setEditingStudent(student);
     setFormData({
       firstName: student.firstName,
       lastName: student.lastName,
       group: student.group,
       birthDate: student.birthDate,
     });
+    setEditingStudent(student);
     setOpenDialog(true);
-  };
-
-  const handleDelete = (id) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cet élève ?')) {
-      setRows(rows.filter(row => row.id !== id));
-    }
   };
 
   const handleSubmit = () => {
@@ -87,24 +80,18 @@ const StudentList = () => {
     handleCloseDialog();
   };
 
-  const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+  const handleDelete = (id) => {
+    setRows(rows.filter(row => row.id !== id));
   };
 
-  const getGroupColor = (group) => {
-    switch (group) {
-      case 'Groupe A':
-        return '#0083cb'; // Blue
-      case 'Groupe B':
-        return '#8dc63f'; // Green
-      case 'Groupe C':
-        return '#ed174c'; // Red
-      default:
-        return '#0083cb';
-    }
+  const handleDeleteSelected = () => {
+    setRows(rows.filter(row => !selectionModel.includes(row.id)));
+    setSelectionModel([]);
+  };
+
+  const handleRowClick = (params) => {
+    setSelectedStudent(params.row);
+    setOpenProfile(true);
   };
 
   const columns = [
@@ -112,14 +99,12 @@ const StudentList = () => {
       field: 'avatar',
       headerName: '',
       width: 80,
-      sortable: false,
       renderCell: (params) => (
-        <Avatar 
-          src={params.value} 
-          alt={`${params.row.firstName} ${params.row.lastName}`}
-          sx={{ width: 45, height: 45 }}
-        />
+        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+          <Avatar src={params.value} />
+        </Box>
       ),
+      sortable: false,
       headerAlign: 'center',
       align: 'center',
     },
@@ -127,113 +112,134 @@ const StudentList = () => {
       field: 'firstName',
       headerName: 'Prénom',
       flex: 1,
-      minWidth: 180,
+      headerAlign: 'center',
+      align: 'center',
       renderCell: (params) => (
-        <Typography sx={{ fontFamily: 'Signika', fontWeight: 'regular', fontSize: '1rem' }}>
-          {params.value}
-        </Typography>
+        <Box sx={{ 
+          width: '100%', 
+          height: '100%', 
+          display: 'flex', 
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <Typography>
+            {params.value}
+          </Typography>
+        </Box>
       ),
-      headerAlign: 'left',
-      align: 'left',
     },
     {
       field: 'lastName',
       headerName: 'Nom',
       flex: 1,
-      minWidth: 180,
+      headerAlign: 'center',
+      align: 'center',
       renderCell: (params) => (
-        <Typography sx={{ fontFamily: 'Signika', fontWeight: 'regular', fontSize: '1rem' }}>
-          {params.value}
-        </Typography>
+        <Box sx={{ 
+          width: '100%', 
+          height: '100%', 
+          display: 'flex', 
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <Typography>
+            {params.value}
+          </Typography>
+        </Box>
       ),
-      headerAlign: 'left',
-      align: 'left',
     },
     {
       field: 'group',
       headerName: 'Groupe',
       flex: 1,
-      minWidth: 160,
-      renderCell: (params) => (
-        <Box
-          sx={{
-            backgroundColor: `${getGroupColor(params.value)}15`,
-            color: getGroupColor(params.value),
-            padding: '8px 16px',
-            borderRadius: '20px',
-            fontFamily: 'Signika',
-            fontWeight: 'regular',
-            fontSize: '0.95rem',
-          }}
-        >
-          {params.value}
-        </Box>
-      ),
       headerAlign: 'center',
       align: 'center',
+      renderCell: (params) => (
+        <Box sx={{ 
+          width: '100%', 
+          height: '100%', 
+          display: 'flex', 
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <Box
+            sx={{
+              backgroundColor: `${getGroupColor(params.value)}15`,
+              color: getGroupColor(params.value),
+              py: 1,
+              px: 2,
+              borderRadius: '20px',
+              fontWeight: 500,
+            }}
+          >
+            {params.value}
+          </Box>
+        </Box>
+      ),
     },
     {
       field: 'birthDate',
       headerName: 'Date de naissance',
       flex: 1,
-      minWidth: 200,
+      headerAlign: 'center',
+      align: 'center',
+      valueFormatter: (params) => new Date(params.value).toLocaleDateString('fr-FR'),
       renderCell: (params) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <CalendarToday sx={{ fontSize: 20, color: '#0083cb' }} />
-          <Typography sx={{ fontFamily: 'Signika Light', fontSize: '0.95rem' }}>
-            {params.value ? new Date(params.value).toLocaleDateString('fr-FR') : ''}
+        <Box sx={{ 
+          width: '100%', 
+          height: '100%', 
+          display: 'flex', 
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <Typography>
+            {new Date(params.value).toLocaleDateString('fr-FR')}
           </Typography>
         </Box>
       ),
-      headerAlign: 'left',
-      align: 'left',
     },
     {
       field: 'actions',
       headerName: 'Actions',
       width: 120,
       sortable: false,
+      headerAlign: 'center',
+      align: 'center',
       renderCell: (params) => (
         <Box sx={{ 
+          width: '100%', 
+          height: '100%', 
           display: 'flex', 
+          alignItems: 'center',
+          justifyContent: 'center',
           gap: 1,
-          position: 'sticky',
-          right: 0,
-          backgroundColor: '#fff',
-          paddingX: 1,
         }}>
           <Tooltip title="Modifier">
             <IconButton
-              onClick={() => handleEdit(params.row)}
-              size="small"
-              sx={{ 
-                color: '#0083cb',
-                '&:hover': {
-                  backgroundColor: '#0083cb15',
-                },
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEdit(params.row);
               }}
+              size="small"
+              sx={{ color: '#0083cb' }}
             >
               <EditIcon />
             </IconButton>
           </Tooltip>
           <Tooltip title="Supprimer">
             <IconButton
-              onClick={() => handleDelete(params.row.id)}
-              size="small"
-              sx={{ 
-                color: '#ed174c',
-                '&:hover': {
-                  backgroundColor: '#ed174c15',
-                },
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete(params.row.id);
               }}
+              size="small"
+              sx={{ color: '#ed174c' }}
             >
               <DeleteIcon />
             </IconButton>
           </Tooltip>
         </Box>
       ),
-      headerAlign: 'center',
-      align: 'center',
     },
   ];
 
@@ -264,21 +270,40 @@ const StudentList = () => {
         >
           Gestion des Enfants
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleOpenDialog}
-          sx={{
-            backgroundColor: '#0083cb',
-            borderRadius: '25px',
-            padding: '10px 24px',
-            '&:hover': {
-              backgroundColor: '#006ba3',
-            },
-          }}
-        >
-          Ajouter un Enfant
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          {selectionModel.length > 0 && (
+            <Button
+              variant="contained"
+              startIcon={<DeleteSweepIcon />}
+              onClick={handleDeleteSelected}
+              sx={{
+                backgroundColor: '#ed174c',
+                borderRadius: '25px',
+                padding: '10px 24px',
+                '&:hover': {
+                  backgroundColor: '#d41543',
+                },
+              }}
+            >
+              Supprimer ({selectionModel.length})
+            </Button>
+          )}
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleOpenDialog}
+            sx={{
+              backgroundColor: '#0083cb',
+              borderRadius: '25px',
+              padding: '10px 24px',
+              '&:hover': {
+                backgroundColor: '#006ba3',
+              },
+            }}
+          >
+            Ajouter un Enfant
+          </Button>
+        </Box>
       </Box>
 
       <Box sx={{ 
@@ -296,12 +321,19 @@ const StudentList = () => {
             },
           }}
           pageSizeOptions={[10, 25, 50]}
-          disableRowSelectionOnClick
+          checkboxSelection
+          disableRowSelectionOnClick={false}
           disableColumnMenu
-          getRowHeight={() => 100}
+          getRowHeight={() => 75}
+          onRowClick={handleRowClick}
+          rowSelectionModel={selectionModel}
+          onRowSelectionModelChange={(newSelectionModel) => {
+            setSelectionModel(newSelectionModel);
+          }}
           sx={{
             border: 'none',
             backgroundColor: '#fff',
+            cursor: 'pointer',
             '& .MuiDataGrid-cell': {
               borderBottom: '1px solid #f0f0f0',
               py: 3,
@@ -329,6 +361,18 @@ const StudentList = () => {
               '&:hover': {
                 backgroundColor: '#f8f9fa',
               },
+              '&.Mui-selected': {
+                backgroundColor: '#0083cb15',
+                '&:hover': {
+                  backgroundColor: '#0083cb22',
+                },
+              },
+            },
+            '& .MuiCheckbox-root': {
+              color: '#0083cb',
+              '&.Mui-checked': {
+                color: '#0083cb',
+              },
             },
             '& .MuiDataGrid-footer': {
               borderTop: 'none',
@@ -343,118 +387,20 @@ const StudentList = () => {
         />
       </Box>
 
-      <Dialog
+      <StudentFormDialog
         open={openDialog}
         onClose={handleCloseDialog}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: '12px',
-          },
-        }}
-      >
-        <DialogTitle sx={{ fontFamily: 'Signika', color: '#0083cb' }}>
-          {editingStudent ? 'Modifier un Enfant' : 'Ajouter un Enfant'}
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
-            <TextField
-              name="lastName"
-              label="Nom"
-              value={formData.lastName}
-              onChange={handleInputChange}
-              fullWidth
-              required
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '12px',
-                },
-              }}
-            />
-            <TextField
-              name="firstName"
-              label="Prénom"
-              value={formData.firstName}
-              onChange={handleInputChange}
-              fullWidth
-              required
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '12px',
-                },
-              }}
-            />
-            <FormControl fullWidth required>
-              <InputLabel>Groupe</InputLabel>
-              <Select
-                name="group"
-                value={formData.group}
-                onChange={handleInputChange}
-                label="Groupe"
-                sx={{
-                  borderRadius: '12px',
-                }}
-              >
-                {groups.map((group) => (
-                  <MenuItem key={group} value={group}>
-                    <Box sx={{ 
-                      color: getGroupColor(group),
-                      fontFamily: 'Signika',
-                    }}>
-                      {group}
-                    </Box>
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <TextField
-              name="birthDate"
-              label="Date de naissance"
-              type="date"
-              value={formData.birthDate}
-              onChange={handleInputChange}
-              fullWidth
-              required
-              InputLabelProps={{ shrink: true }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '12px',
-                },
-              }}
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
-          <Button
-            onClick={handleCloseDialog}
-            sx={{
-              color: '#666',
-              borderRadius: '25px',
-              padding: '8px 24px',
-              '&:hover': {
-                backgroundColor: '#f0f0f0',
-              },
-            }}
-          >
-            Annuler
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            variant="contained"
-            sx={{
-              backgroundColor: '#0083cb',
-              borderRadius: '25px',
-              padding: '8px 24px',
-              '&:hover': {
-                backgroundColor: '#006ba3',
-              },
-            }}
-          >
-            {editingStudent ? 'Modifier' : 'Ajouter'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        formData={formData}
+        setFormData={setFormData}
+        handleSubmit={handleSubmit}
+        editingStudent={editingStudent}
+      />
+
+      <StudentProfileDialog
+        student={selectedStudent}
+        open={openProfile}
+        onClose={() => setOpenProfile(false)}
+      />
     </Box>
   );
 };
