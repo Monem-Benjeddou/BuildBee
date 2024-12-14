@@ -28,9 +28,9 @@ const Layout = ({ children }) => {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
+          p: 0,
           width: { sm: `calc(100% - ${drawerWidth}px)` },
-          ml: { sm: `${drawerWidth}px` },
+          ml: { sm: `20px` },
           mt: '64px',
         }}
       >
