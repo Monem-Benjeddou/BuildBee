@@ -7,6 +7,8 @@ import StudentList from './pages/Students/List';
 import Login from './components/Login';
 import Register from './components/Register';
 import AccountDetails from './pages/Account/AccountDetails';
+import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
@@ -32,6 +34,16 @@ function App() {
             <Route path="/register" element={
               <PublicRoute>
                 <Register />
+              </PublicRoute>
+            } />
+            <Route path="/forgot-password" element={
+              <PublicRoute>
+                <ForgotPassword />
+              </PublicRoute>
+            } />
+            <Route path="/reset-password" element={
+              <PublicRoute>
+                <ResetPassword />
               </PublicRoute>
             } />
             
