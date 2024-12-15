@@ -1,21 +1,69 @@
 import initialData from '../data/data.json';
 
-const STORAGE_KEY = 'buildbee_data';
+const API_BASE_URL = 'http://localhost:4005/api';
 
-// Initialize data from data.json if not in localStorage
-const initializeData = () => {
-  const storedData = localStorage.getItem(STORAGE_KEY);
-  if (!storedData) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(initialData));
+export const handleResponse = async (response) => {
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null);
+    throw new Error(errorData?.error?.message || `HTTP error! status: ${response.status}`);
+  }
+  const data = await response.json();
+  return data.data || data; // Return data.data if it exists, otherwise return the whole response
+};
+
+export const apiGet = async (endpoint, queryParams = {}) => {
+  const queryString = new URLSearchParams(queryParams).toString();
+  const url = `${API_BASE_URL}${endpoint}${queryString ? `?${queryString}` : ''}`;
+  const response = await fetch(url);
+  return handleResponse(response);
+};
+
+export const apiPost = async (endpoint, body) => {
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+  return handleResponse(response);
+};
+
+export const apiPut = async (endpoint, body) => {
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+  return handleResponse(response);
+};
+
+export const apiDelete = async (endpoint) => {
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    method: 'DELETE',
+  });
+  return handleResponse(response);
+};
+
+// Initialize data from data.json if not in API
+const initializeData = async () => {
+  try {
+    const storedData = await apiGet('/data');
+    if (!storedData) {
+      await apiPost('/data', initialData);
+    }
+  } catch (error) {
+    console.error('Error initializing data:', error);
   }
 };
 
 initializeData();
 
-export const getData = () => {
+export const getData = async () => {
   try {
-    const storedData = localStorage.getItem(STORAGE_KEY);
-    return storedData ? JSON.parse(storedData) : initialData;
+    return await apiGet('/data');
   } catch (error) {
     console.error('Error reading data:', error);
     return initialData;
@@ -24,35 +72,7 @@ export const getData = () => {
 
 export const writeData = async (newData) => {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
-import data from '../data/data.json';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-
-const execAsync = promisify(exec);
-
-export const getData = () => {
-  try {
-    return data;
-  } catch (error) {
-    console.error('Error reading data:', error);
-    return null;
-  }
-};
-
-export const writeData = async (newData) => {
-  try {
-    const scriptPath = 'scripts/updateData.js';
-    const jsonData = JSON.stringify(newData);
-    const { stdout, stderr } = await execAsync(`node ${scriptPath} '${jsonData}'`);
-    
-    if (stderr) {
-      console.error('Error from script:', stderr);
-      return false;
-    }
-    
-    const result = JSON.parse(stdout);
-    return result.success;
+    return await apiPut('/data', newData);
   } catch (error) {
     console.error('Error writing data:', error);
     return false;

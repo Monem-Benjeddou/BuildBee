@@ -48,33 +48,30 @@ const StudentList = () => {
   });
   const theme = useTheme();
 
-  useEffect(() => {
-    const loadData = async () => {
-      const allGroups = await getAllGroups();
-      setGroups(allGroups);
-      
-      const students = await getAllStudents();
-      if (Array.isArray(students)) {
-        setRows(students.map(student => {
-          const studentGroups = student.groupIds && student.groupIds.length > 0
-            ? student.groupIds
-                .map(id => allGroups.find(g => g.id === id))
-                .filter(Boolean)
-                .map(g => g.name)
-                .join(', ')
-            : 'No Groups';
-          return {
-            ...student,
-            groups: studentGroups
-          };
-        }));
-      } else {
-        console.error('Students data is not an array:', students);
-        setRows([]);
-      }
-    };
+  const loadStudents = async () => {
+    try {
+      const studentsData = await getAllStudents();
+      setRows(studentsData.map(student => ({
+        ...student,
+        groups: student.groups || 'No Groups'
+      })));
+    } catch (error) {
+      console.error('Error loading students:', error);
+    }
+  };
 
-    loadData();
+  const loadGroups = async () => {
+    try {
+      const groupsData = await getAllGroups();
+      setGroups(groupsData);
+    } catch (error) {
+      console.error('Error loading groups:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadStudents();
+    loadGroups();
   }, []);
 
   const handleSubmit = async (studentData) => {
@@ -84,26 +81,7 @@ const StudentList = () => {
       } else {
         await createStudent(studentData);
       }
-      
-      // Reload data after update
-      const allGroups = await getAllGroups();
-      const students = await getAllStudents();
-      if (Array.isArray(students)) {
-        setRows(students.map(student => {
-          const studentGroups = student.groupIds && student.groupIds.length > 0
-            ? student.groupIds
-                .map(id => allGroups.find(g => g.id === id))
-                .filter(Boolean)
-                .map(g => g.name)
-                .join(', ')
-            : 'No Groups';
-          return {
-            ...student,
-            groups: studentGroups
-          };
-        }));
-      }
-      
+      loadStudents();
       setOpenDialog(false);
       setEditingStudent(null);
     } catch (error) {
@@ -136,25 +114,7 @@ const StudentList = () => {
   const handleDelete = async (id) => {
     try {
       await deleteStudent(id);
-      const allGroups = await getAllGroups();
-      setGroups(allGroups);
-      
-      const students = await getAllStudents();
-      if (Array.isArray(students)) {
-        setRows(students.map(student => {
-          const studentGroups = student.groupIds && student.groupIds.length > 0
-            ? student.groupIds
-                .map(id => allGroups.find(g => g.id === id))
-                .filter(Boolean)
-                .map(g => g.name)
-                .join(', ')
-            : 'No Groups';
-          return {
-            ...student,
-            groups: studentGroups
-          };
-        }));
-      }
+      loadStudents();
     } catch (error) {
       console.error('Error deleting student:', error);
     }
@@ -164,25 +124,7 @@ const StudentList = () => {
     try {
       await deleteStudents(selectionModel);
       setSelectionModel([]);
-      const allGroups = await getAllGroups();
-      setGroups(allGroups);
-      
-      const students = await getAllStudents();
-      if (Array.isArray(students)) {
-        setRows(students.map(student => {
-          const studentGroups = student.groupIds && student.groupIds.length > 0
-            ? student.groupIds
-                .map(id => allGroups.find(g => g.id === id))
-                .filter(Boolean)
-                .map(g => g.name)
-                .join(', ')
-            : 'No Groups';
-          return {
-            ...student,
-            groups: studentGroups
-          };
-        }));
-      }
+      loadStudents();
     } catch (error) {
       console.error('Error deleting students:', error);
     }

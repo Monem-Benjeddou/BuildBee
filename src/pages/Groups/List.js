@@ -15,7 +15,11 @@ import {
 } from '@mui/icons-material';
 import { DataGrid } from '@mui/x-data-grid';
 import GroupDialog from '../../components/GroupDialog';
-import { getAllGroups, deleteGroup } from '../../services/groupService';
+import { 
+  getAllGroups, 
+  deleteGroup, 
+  getGroupSessions 
+} from '../../services/groupService';
 import { format } from 'date-fns';
 
 const GroupList = () => {
@@ -24,50 +28,56 @@ const GroupList = () => {
   const [editingGroup, setEditingGroup] = useState(null);
   const theme = useTheme();
 
+  const formatSessionDateTime = (date) => {
+    return format(new Date(date), 'PPP p');
+  };
+
+  const loadData = async () => {
+    try {
+      const groups = await getAllGroups();
+      const groupsWithSessions = await Promise.all(groups.map(async (group) => {
+        try {
+          const sessions = await getGroupSessions(group.id);
+          const upcomingSessions = sessions
+            .filter(session => new Date(session.date) > new Date())
+            .sort((a, b) => new Date(a.date) - new Date(b.date));
+          
+          const nextSession = upcomingSessions[0];
+          const upcomingSessionsText = upcomingSessions
+            .slice(0, 3)
+            .map(session => formatSessionDateTime(session.date))
+            .join('\n');
+
+          return {
+            ...group,
+            nextSession: nextSession ? formatSessionDateTime(nextSession.date) : 'No upcoming sessions',
+            upcomingSessions: upcomingSessionsText || 'No upcoming sessions',
+            sessionCount: sessions.length
+          };
+        } catch (error) {
+          console.error(`Error fetching sessions for group ${group.id}:`, error);
+          return {
+            ...group,
+            nextSession: 'Error loading sessions',
+            upcomingSessions: 'Error loading sessions',
+            sessionCount: 0
+          };
+        }
+      }));
+      setRows(groupsWithSessions);
+    } catch (error) {
+      console.error('Error loading groups:', error);
+      setRows([]);
+    }
+  };
+
   useEffect(() => {
     loadData();
   }, []);
 
-  const loadData = () => {
-    const groups = getAllGroups();
-    const groupsWithSessions = groups.map(group => {
-      const upcomingSessions = getUpcomingSessions(group.sessions || []);
-      const nextSession = upcomingSessions[0];
-      
-      const upcomingSessionsText = upcomingSessions
-        .slice(0, 3)
-        .map(session => formatSessionDateTime(session.date, session.startTime))
-        .join('\n');
-
-      return {
-        ...group,
-        nextSession: nextSession ? 
-          formatSessionDateTime(nextSession.date, nextSession.startTime) : 
-          'No upcoming sessions',
-        upcomingSessions: upcomingSessionsText || 'No upcoming sessions',
-        sessionCount: (group.sessions || []).length
-      };
-    });
-    setRows(groupsWithSessions);
-  };
-
-  const getUpcomingSessions = (sessions) => {
-    if (!sessions || sessions.length === 0) return [];
-    
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    return sessions
-      .filter(session => {
-        const sessionDate = new Date(session.date);
-        sessionDate.setHours(0, 0, 0, 0);
-        return sessionDate >= today && session.status !== 'completed';
-      })
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
-  };
-
-  const formatSessionDateTime = (date, time) => {
-    return `${format(new Date(date), 'dd/MM/yyyy')} at ${time}`;
+  const handleAdd = () => {
+    setEditingGroup(null);
+    setOpenDialog(true);
   };
 
   const handleEdit = (group) => {
@@ -75,79 +85,71 @@ const GroupList = () => {
     setOpenDialog(true);
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this group?')) {
-      deleteGroup(id);
+  const handleDelete = async (id) => {
+    try {
+      await deleteGroup(id);
       loadData();
+    } catch (error) {
+      console.error('Error deleting group:', error);
     }
   };
 
   const columns = [
     {
       field: 'name',
-      headerName: 'Name',
+      headerName: 'Nom du groupe',
       flex: 1,
-    },
-    {
-      field: 'program',
-      headerName: 'Program',
-      flex: 1,
-    },
-    {
-      field: 'nextSession',
-      headerName: 'Next Session',
-      flex: 1.5,
       renderCell: (params) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <EventIcon color="action" sx={{ fontSize: 20 }} />
-          <Typography variant="body2">
+        <Box sx={{ pl: 1 }}>
+          <Typography sx={{ fontFamily: 'Signika Light' }}>
             {params.value}
           </Typography>
         </Box>
       ),
     },
     {
-      field: 'upcomingSessions',
-      headerName: 'Upcoming Sessions',
-      flex: 2,
+      field: 'level',
+      headerName: 'Niveau',
+      flex: 1,
+      headerAlign: 'center',
+      align: 'center',
       renderCell: (params) => (
-        <Box>
-          {params.value.split('\n').map((session, index) => (
-            <Typography key={index} variant="body2">
-              {session}
-            </Typography>
-          ))}
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+          <Typography>
+            {params.value}
+          </Typography>
         </Box>
       ),
     },
     {
-      field: 'sessionCount',
-      headerName: 'Total Sessions',
-      flex: 0.7,
+      field: 'nextSession',
+      headerName: 'Prochaine séance',
+      flex: 1.5,
+      headerAlign: 'center',
       align: 'center',
+      renderCell: (params) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <EventIcon color="action" />
+          <Typography>
+            {params.value}
+          </Typography>
+        </Box>
+      ),
     },
     {
       field: 'actions',
       headerName: 'Actions',
-      flex: 1,
+      width: 120,
+      sortable: false,
       renderCell: (params) => (
         <Box>
-          <Tooltip title="Edit">
-            <IconButton onClick={(e) => {
-              e.stopPropagation();
-              handleEdit(params.row);
-            }}>
+          <Tooltip title="Modifier">
+            <IconButton onClick={() => handleEdit(params.row)} size="small">
               <EditIcon />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Delete">
-            <IconButton 
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDelete(params.row.id);
-              }}
-              sx={{ color: theme.palette.error.main }}
-            >
+          <Tooltip title="Supprimer">
+            <IconButton onClick={() => handleDelete(params.row.id)} size="small" color="error">
               <DeleteIcon />
             </IconButton>
           </Tooltip>
@@ -157,32 +159,34 @@ const GroupList = () => {
   ];
 
   return (
-    <Box p={3}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4" component="h1">
-          Groups
+    <Box sx={{ height: '100%', width: '100%', p: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+        <Typography variant="h5" sx={{ fontFamily: 'Signika' }}>
+          Groupes
         </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => {
-            setEditingGroup(null);
-            setOpenDialog(true);
-          }}
+          onClick={handleAdd}
+          sx={{ fontFamily: 'Signika Light' }}
         >
-          Add Group
+          Nouveau groupe
         </Button>
       </Box>
-
+      
       <DataGrid
         rows={rows}
         columns={columns}
         pageSize={10}
         rowsPerPageOptions={[10]}
         disableSelectionOnClick
-        autoHeight
+        sx={{
+          '& .MuiDataGrid-cell:focus': {
+            outline: 'none',
+          },
+        }}
       />
-
+      
       {openDialog && (
         <GroupDialog
           open={openDialog}
@@ -190,12 +194,12 @@ const GroupList = () => {
             setOpenDialog(false);
             setEditingGroup(null);
           }}
-          group={editingGroup}
-          onSubmit={(formData) => {
+          onSave={() => {
             setOpenDialog(false);
             setEditingGroup(null);
             loadData();
           }}
+          group={editingGroup}
         />
       )}
     </Box>

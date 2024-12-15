@@ -1,99 +1,54 @@
-import { v4 as uuidv4 } from 'uuid';
-import { getData, writeData } from '../utils/fileUtils';
+import { apiGet, apiPost, apiPut, apiDelete } from '../utils/fileUtils';
 
-export const getAllGroups = () => {
-  const data = getData();
-  return data?.groups || [];
-};
-
-export const getGroup = (id) => {
-  const data = getData();
-  return data.groups.find(group => group.id === id);
-};
-
-export const createGroup = (groupData) => {
-  const data = getData();
-  if (!data) return null;
-
-  const newGroup = {
-    id: uuidv4(),
-    ...groupData,
-    studentIds: [],
-    sessions: groupData.sessions || []
+const transformGroup = (group) => {
+  if (!group) return null;
+  return {
+    ...group,
+    id: group._id
   };
-
-  if (!data.groups) {
-    data.groups = [];
-  }
-
-  data.groups.push(newGroup);
-  writeData(data);
-
-  return newGroup;
 };
 
-export const updateGroup = (id, groupData) => {
-  const data = getData();
-  if (!data) return null;
-
-  const index = data.groups.findIndex(group => group.id === id);
-  if (index === -1) return null;
-
-  const updatedGroup = {
-    ...data.groups[index],
-    ...groupData,
-    id,
-    studentIds: groupData.studentIds || data.groups[index].studentIds,
-    sessions: groupData.sessions || data.groups[index].sessions
-  };
-
-  data.groups[index] = updatedGroup;
-  writeData(data);
-
-  return updatedGroup;
+const transformGroups = (groups) => {
+  if (!Array.isArray(groups)) return [];
+  return groups.map(transformGroup);
 };
 
-export const deleteGroup = (id) => {
-  const data = getData();
-  if (!data) return false;
-
-  const index = data.groups.findIndex(group => group.id === id);
-  if (index === -1) return false;
-
-  data.groups.splice(index, 1);
-  writeData(data);
-
-  return true;
+export const getAllGroups = async () => {
+  const groups = await apiGet('/groups');
+  return transformGroups(groups);
 };
 
-export const addStudentToGroup = (groupId, studentId) => {
-  const data = getData();
-  if (!data) return false;
-
-  const group = data.groups.find(g => g.id === groupId);
-  if (!group) return false;
-
-  if (!group.studentIds) {
-    group.studentIds = [];
-  }
-
-  if (!group.studentIds.includes(studentId)) {
-    group.studentIds.push(studentId);
-    writeData(data);
-  }
-
-  return true;
+export const getGroup = async (id) => {
+  const group = await apiGet(`/groups/${id}`);
+  return transformGroup(group);
 };
 
-export const removeStudentFromGroup = (groupId, studentId) => {
-  const data = getData();
-  if (!data) return false;
+export const createGroup = async (groupData) => {
+  const group = await apiPost('/groups', groupData);
+  return transformGroup(group);
+};
 
-  const group = data.groups.find(g => g.id === groupId);
-  if (!group || !group.studentIds) return false;
+export const updateGroup = async (id, groupData) => {
+  const group = await apiPut(`/groups/${id}`, groupData);
+  return transformGroup(group);
+};
 
-  group.studentIds = group.studentIds.filter(id => id !== studentId);
-  writeData(data);
+export const deleteGroup = async (id) => {
+  return apiDelete(`/groups/${id}`);
+};
 
-  return true;
+export const addStudentToGroup = async (groupId, studentId) => {
+  return apiPost(`/groups/${groupId}/students`, { studentId });
+};
+
+export const removeStudentFromGroup = async (groupId, studentId) => {
+  return apiDelete(`/groups/${groupId}/students/${studentId}`);
+};
+
+export const getGroupStudents = async (groupId) => {
+  return apiGet(`/groups/${groupId}/students`);
+};
+
+export const getGroupSessions = async (groupId) => {
+  return apiGet(`/groups/${groupId}/sessions`);
 };

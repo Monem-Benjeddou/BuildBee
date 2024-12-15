@@ -1,139 +1,73 @@
 import { v4 as uuidv4 } from 'uuid';
-import { getData, writeData } from '../utils/fileUtils';
+import { apiGet, apiPost, apiPut, apiDelete } from '../utils/fileUtils';
+
+const transformStudent = async (student) => {
+  if (!student) return null;
+  
+  // Fetch group details for the student if they have groupIds
+  let groups = '';
+  if (student.groupIds && student.groupIds.length > 0) {
+    try {
+      const groupPromises = student.groupIds.map(groupId => apiGet(`/groups/${groupId}`));
+      const groupDetails = await Promise.all(groupPromises);
+      groups = groupDetails
+        .filter(group => group) // Remove any null groups
+        .map(group => group.name)
+        .join(', ');
+    } catch (error) {
+      console.error('Error fetching group details:', error);
+    }
+  }
+
+  return {
+    ...student,
+    id: student._id,
+    groups // Add the groups field
+  };
+};
+
+const transformStudents = async (students) => {
+  if (!Array.isArray(students)) return [];
+  const transformedStudents = await Promise.all(students.map(transformStudent));
+  return transformedStudents.filter(student => student !== null);
+};
 
 // Get all students
-export const getAllStudents = async () => {
-  const data = await getData();
-  return data.students || [];
+export const getAllStudents = async (params = {}) => {
+  const students = await apiGet('/students', params);
+  return transformStudents(students);
 };
 
 // Get student by ID
 export const getStudentById = async (id) => {
-  const data = await getData();
-  return data.students.find(student => student.id === id);
+  const student = await apiGet(`/students/${id}`);
+  return transformStudent(student);
 };
 
 // Create new student
 export const createStudent = async (studentData) => {
-  const data = await getData();
-  
-  const newStudent = {
-    id: uuidv4(),
-    ...studentData,
-    groupIds: studentData.groupIds || []
-  };
-  
-  // Add student to data
-  data.students.push(newStudent);
-
-  // Update group associations
-  if (studentData.groupIds) {
-    studentData.groupIds.forEach(groupId => {
-      const group = data.groups.find(g => g.id === groupId);
-      if (group) {
-        if (!group.studentIds) {
-          group.studentIds = [];
-        }
-        if (!group.studentIds.includes(newStudent.id)) {
-          group.studentIds.push(newStudent.id);
-        }
-      }
-    });
-  }
-
-  await writeData(data);
-  return newStudent;
+  const student = await apiPost('/students', studentData);
+  return transformStudent(student);
 };
 
 // Update student
 export const updateStudent = async (id, studentData) => {
-  const data = await getData();
-  const index = data.students.findIndex(student => student.id === id);
-  if (index === -1) return null;
-
-  const oldStudent = data.students[index];
-  const oldGroupIds = oldStudent.groupIds || [];
-  const newGroupIds = studentData.groupIds || [];
-
-  // Remove student from groups they're no longer in
-  oldGroupIds.forEach(groupId => {
-    if (!newGroupIds.includes(groupId)) {
-      const group = data.groups.find(g => g.id === groupId);
-      if (group && group.studentIds) {
-        const studentIndex = group.studentIds.indexOf(id);
-        if (studentIndex !== -1) {
-          group.studentIds.splice(studentIndex, 1);
-        }
-      }
-    }
-  });
-
-  // Add student to new groups
-  newGroupIds.forEach(groupId => {
-    if (!oldGroupIds.includes(groupId)) {
-      const group = data.groups.find(g => g.id === groupId);
-      if (group) {
-        if (!group.studentIds) {
-          group.studentIds = [];
-        }
-        if (!group.studentIds.includes(id)) {
-          group.studentIds.push(id);
-        }
-      }
-    }
-  });
-
-  // Update student data
-  const updatedStudent = {
-    ...oldStudent,
-    ...studentData,
-    id,
-    groupIds: newGroupIds
-  };
-  
-  data.students[index] = updatedStudent;
-  await writeData(data);
-  return updatedStudent;
+  const student = await apiPut(`/students/${id}`, studentData);
+  return transformStudent(student);
 };
 
 // Delete student
 export const deleteStudent = async (id) => {
-  const data = await getData();
-  const index = data.students.findIndex(student => student.id === id);
-  if (index === -1) return false;
-
-  // Remove student from all groups
-  const student = data.students[index];
-  if (student.groupIds) {
-    student.groupIds.forEach(groupId => {
-      const group = data.groups.find(g => g.id === groupId);
-      if (group && group.studentIds) {
-        const studentIndex = group.studentIds.indexOf(id);
-        if (studentIndex !== -1) {
-          group.studentIds.splice(studentIndex, 1);
-        }
-      }
-    });
-  }
-
-  data.students.splice(index, 1);
-  await writeData(data);
-  return true;
+  return apiDelete(`/students/${id}`);
 };
 
 // Delete multiple students
 export const deleteStudents = async (ids) => {
-  for (const id of ids) {
-    await deleteStudent(id);
-  }
-  return true;
+  return Promise.all(ids.map(id => deleteStudent(id)));
 };
 
 // Get students by group
 export const getStudentsByGroup = async (groupId) => {
-  const data = await getData();
-  const group = data.groups.find(g => g.id === groupId);
-  if (!group || !group.studentIds) return [];
-  
-  return data.students.filter(student => group.studentIds.includes(student.id));
+  const students = await apiGet(`/groups/${groupId}/students`);
+  return transformStudents(students);
 };
