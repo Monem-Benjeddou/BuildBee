@@ -76,7 +76,6 @@ const Header = ({ drawerWidth, isOpen, onDrawerToggle }) => {
           component="div"
           sx={{ flexGrow: 1, color: 'grey.800' }}
         >
-          Dashboard
         </Typography>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>

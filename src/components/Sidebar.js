@@ -56,6 +56,7 @@ const Sidebar = () => {
             {item.icon}
             <span className="menu-text">{item.text}</span>
           </Link>
+
         ))}
       </nav>
 

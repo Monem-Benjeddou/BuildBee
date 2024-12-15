@@ -1,93 +1,193 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
   Button,
-  Avatar,
   IconButton,
+  Avatar,
   Tooltip,
   Checkbox,
   TextField,
 } from '@mui/material';
-import { DataGrid } from '@mui/x-data-grid';
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   DeleteSweep as DeleteSweepIcon,
 } from '@mui/icons-material';
-import { students as initialRows } from '../../data/students';
-import StudentFormDialog from '../../components/StudentFormDialog';
+import { DataGrid } from '@mui/x-data-grid';
+import StudentDialog from '../../components/StudentDialog';
 import StudentProfileDialog from '../../components/StudentProfileDialog';
-import '../../styles/layout.css';
+
+import { getGroupColor } from '../../utils/colors';
+import { 
+  getAllStudents, 
+  updateStudent, 
+  createStudent, 
+  deleteStudent,
+  deleteStudents 
+} from '../../services/studentService';
+import { getAllGroups } from '../../services/groupService';
+import { useTheme } from '@mui/material/styles';
+
+const getInitials = (firstName = '', lastName = '') => {
+  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+};
 
 const StudentList = () => {
-  const [rows, setRows] = useState(initialRows);
+  const [rows, setRows] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
+  const [openProfile, setOpenProfile] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState(null);
-  const [openProfile, setOpenProfile] = useState(false);
   const [selectionModel, setSelectionModel] = useState([]);
+  const [groups, setGroups] = useState([]);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     group: '',
     birthDate: '',
   });
+  const theme = useTheme();
 
-  const handleOpenDialog = () => {
-    setFormData({
-      firstName: '',
-      lastName: '',
-      group: '',
-      birthDate: '',
-    });
-    setEditingStudent(null);
-    setOpenDialog(true);
-  };
+  useEffect(() => {
+    const loadData = async () => {
+      const allGroups = await getAllGroups();
+      setGroups(allGroups);
+      
+      const students = await getAllStudents();
+      if (Array.isArray(students)) {
+        setRows(students.map(student => {
+          const studentGroups = student.groupIds && student.groupIds.length > 0
+            ? student.groupIds
+                .map(id => allGroups.find(g => g.id === id))
+                .filter(Boolean)
+                .map(g => g.name)
+                .join(', ')
+            : 'No Groups';
+          return {
+            ...student,
+            groups: studentGroups
+          };
+        }));
+      } else {
+        console.error('Students data is not an array:', students);
+        setRows([]);
+      }
+    };
 
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
-    setEditingStudent(null);
+    loadData();
+  }, []);
+
+  const handleSubmit = async (studentData) => {
+    try {
+      if (editingStudent) {
+        await updateStudent(editingStudent.id, studentData);
+      } else {
+        await createStudent(studentData);
+      }
+      
+      // Reload data after update
+      const allGroups = await getAllGroups();
+      const students = await getAllStudents();
+      if (Array.isArray(students)) {
+        setRows(students.map(student => {
+          const studentGroups = student.groupIds && student.groupIds.length > 0
+            ? student.groupIds
+                .map(id => allGroups.find(g => g.id === id))
+                .filter(Boolean)
+                .map(g => g.name)
+                .join(', ')
+            : 'No Groups';
+          return {
+            ...student,
+            groups: studentGroups
+          };
+        }));
+      }
+      
+      setOpenDialog(false);
+      setEditingStudent(null);
+    } catch (error) {
+      console.error('Error submitting student:', error);
+    }
   };
 
   const handleEdit = (student) => {
+    setEditingStudent(student);
     setFormData({
       firstName: student.firstName,
       lastName: student.lastName,
       group: student.group,
       birthDate: student.birthDate,
     });
-    setEditingStudent(student);
     setOpenDialog(true);
   };
 
-  const handleSubmit = () => {
-    if (editingStudent) {
-      setRows(rows.map(row =>
-        row.id === editingStudent.id
-          ? { ...row, ...formData }
-          : row
-      ));
-    } else {
-      const newStudent = {
-        id: Math.max(...rows.map(r => r.id)) + 1,
-        ...formData,
-        avatar: `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70)}`,
-        createdAt: new Date().toISOString(),
-      };
-      setRows([...rows, newStudent]);
+  const handleAdd = () => {
+    setEditingStudent(null);
+    setFormData({
+      firstName: '',
+      lastName: '',
+      group: '',
+      birthDate: '',
+    });
+    setOpenDialog(true);
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await deleteStudent(id);
+      const allGroups = await getAllGroups();
+      setGroups(allGroups);
+      
+      const students = await getAllStudents();
+      if (Array.isArray(students)) {
+        setRows(students.map(student => {
+          const studentGroups = student.groupIds && student.groupIds.length > 0
+            ? student.groupIds
+                .map(id => allGroups.find(g => g.id === id))
+                .filter(Boolean)
+                .map(g => g.name)
+                .join(', ')
+            : 'No Groups';
+          return {
+            ...student,
+            groups: studentGroups
+          };
+        }));
+      }
+    } catch (error) {
+      console.error('Error deleting student:', error);
     }
-    handleCloseDialog();
   };
 
-  const handleDelete = (id) => {
-    setRows(rows.filter(row => row.id !== id));
-  };
-
-  const handleDeleteSelected = () => {
-    setRows(rows.filter(row => !selectionModel.includes(row.id)));
-    setSelectionModel([]);
+  const handleDeleteSelected = async () => {
+    try {
+      await deleteStudents(selectionModel);
+      setSelectionModel([]);
+      const allGroups = await getAllGroups();
+      setGroups(allGroups);
+      
+      const students = await getAllStudents();
+      if (Array.isArray(students)) {
+        setRows(students.map(student => {
+          const studentGroups = student.groupIds && student.groupIds.length > 0
+            ? student.groupIds
+                .map(id => allGroups.find(g => g.id === id))
+                .filter(Boolean)
+                .map(g => g.name)
+                .join(', ')
+            : 'No Groups';
+          return {
+            ...student,
+            groups: studentGroups
+          };
+        }));
+      }
+    } catch (error) {
+      console.error('Error deleting students:', error);
+    }
   };
 
   const handleRowClick = (params) => {
@@ -99,31 +199,30 @@ const StudentList = () => {
     {
       field: 'avatar',
       headerName: '',
-      width: 80,
-      renderCell: (params) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-          <Avatar src={params.value} />
-        </Box>
-      ),
+      width: 50,
       sortable: false,
-      headerAlign: 'center',
-      align: 'center',
+      filterable: false,
+      renderCell: (params) => (
+        <Avatar
+          src={params.value}
+          sx={{
+            width: 32,
+            height: 32,
+            bgcolor: params.row.color || theme.palette.primary.main,
+          }}
+        >
+          {getInitials(params.row.firstName, params.row.lastName)}
+        </Avatar>
+      ),
     },
     {
       field: 'firstName',
       headerName: 'Prénom',
       flex: 1,
-      headerAlign: 'center',
-      align: 'center',
+      minWidth: 130,
       renderCell: (params) => (
-        <Box sx={{ 
-          width: '100%', 
-          height: '100%', 
-          display: 'flex', 
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-          <Typography>
+        <Box sx={{ pl: 1 }}>
+          <Typography sx={{ fontFamily: 'Signika Light' }}>
             {params.value}
           </Typography>
         </Box>
@@ -136,45 +235,25 @@ const StudentList = () => {
       headerAlign: 'center',
       align: 'center',
       renderCell: (params) => (
-        <Box sx={{ 
-          width: '100%', 
-          height: '100%', 
-          display: 'flex', 
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-          <Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+          <Typography sx={{ fontFamily: 'Signika Light' }}>
             {params.value}
           </Typography>
         </Box>
       ),
     },
     {
-      field: 'group',
+      field: 'groups',
       headerName: 'Groupe',
       flex: 1,
       headerAlign: 'center',
       align: 'center',
       renderCell: (params) => (
-        <Box sx={{ 
-          width: '100%', 
-          height: '100%', 
-          display: 'flex', 
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-          <Box
-            sx={{
-              backgroundColor: '#f0f0f0',
-              color: '#2c3e50',
-              py: 1,
-              px: 2,
-              borderRadius: '20px',
-              fontWeight: 500,
-            }}
-          >
+
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+          <Typography>
             {params.value}
-          </Box>
+          </Typography>
         </Box>
       ),
     },
@@ -186,14 +265,8 @@ const StudentList = () => {
       align: 'center',
       valueFormatter: (params) => new Date(params.value).toLocaleDateString('fr-FR'),
       renderCell: (params) => (
-        <Box sx={{ 
-          width: '100%', 
-          height: '100%', 
-          display: 'flex', 
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-          <Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+          <Typography sx={{ fontFamily: 'Signika Light' }}>
             {new Date(params.value).toLocaleDateString('fr-FR')}
           </Typography>
         </Box>
@@ -204,17 +277,9 @@ const StudentList = () => {
       headerName: 'Actions',
       width: 120,
       sortable: false,
-      headerAlign: 'center',
-      align: 'center',
+      filterable: false,
       renderCell: (params) => (
-        <Box sx={{ 
-          width: '100%', 
-          height: '100%', 
-          display: 'flex', 
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 1,
-        }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', gap: 1 }}>
           <Tooltip title="Modifier">
             <IconButton
               onClick={(e) => {
@@ -222,7 +287,7 @@ const StudentList = () => {
                 handleEdit(params.row);
               }}
               size="small"
-              sx={{ color: '#0083cb' }}
+              sx={{ color: theme.palette.primary.main }}
             >
               <EditIcon />
             </IconButton>
@@ -234,7 +299,7 @@ const StudentList = () => {
                 handleDelete(params.row.id);
               }}
               size="small"
-              sx={{ color: '#ed174c' }}
+              sx={{ color: theme.palette.error.main }}
             >
               <DeleteIcon />
             </IconButton>
@@ -245,168 +310,114 @@ const StudentList = () => {
   ];
 
   return (
-    <div className="main-layout">
-      <div className="main-content">
-        <Box sx={{ 
-          height: '100%', 
-          width: '100%', 
-          display: 'flex',
-          flexDirection: 'column',
-        }}>
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            px: 3,
-            py: 2,
-            borderBottom: '1px solid #f0f0f0',
-            backgroundColor: '#fff',
-          }}>
-            <Typography 
-              variant="h4" 
-              sx={{ 
-                color: '#0083cb', 
-                fontWeight: 600, 
-                fontFamily: 'Signika',
-                fontSize: { xs: '1.8rem', sm: '2.2rem', md: '2.5rem' },
+
+    <Box sx={{ 
+      height: '100%', 
+      width: '100%', 
+      display: 'flex',
+      flexDirection: 'column',
+    }}>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        px: 3,
+        py: 2,
+        borderBottom: '1px solid #f0f0f0',
+        backgroundColor: '#fff',
+      }}>
+        <Typography 
+          variant="h4" 
+          sx={{ 
+            color: theme.palette.primary.main, 
+            fontWeight: 600, 
+            fontFamily: 'Signika',
+            fontSize: { xs: '1.8rem', sm: '2.2rem', md: '2.5rem' },
+          }}
+        >
+          Gestion des Enfants
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          {selectionModel.length > 0 && (
+            <Button
+              variant="contained"
+              startIcon={<DeleteSweepIcon />}
+              onClick={handleDeleteSelected}
+              sx={{
+                backgroundColor: theme.palette.error.main,
+                borderRadius: '25px',
+                padding: '10px 24px',
+                '&:hover': {
+                  backgroundColor: theme.palette.error.dark,
+                },
               }}
             >
-              Gestion des Enfants
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              {selectionModel.length > 0 && (
-                <Button
-                  variant="contained"
-                  startIcon={<DeleteSweepIcon />}
-                  onClick={handleDeleteSelected}
-                  sx={{
-                    backgroundColor: '#ed174c',
-                    borderRadius: '25px',
-                    padding: '10px 24px',
-                    '&:hover': {
-                      backgroundColor: '#d41543',
-                    },
-                  }}
-                >
-                  Supprimer ({selectionModel.length})
-                </Button>
-              )}
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={handleOpenDialog}
-                sx={{
-                  backgroundColor: '#0083cb',
-                  borderRadius: '25px',
-                  padding: '10px 24px',
-                  '&:hover': {
-                    backgroundColor: '#006ba3',
-                  },
-                }}
-              >
-                Ajouter un Enfant
-              </Button>
-            </Box>
-          </Box>
-
-          <Box sx={{ 
-            flexGrow: 1,
-            width: '100%',
-            px: 3,
-            py: 2,
-          }}>
-            <DataGrid
-              rows={rows}
-              columns={columns}
-              initialState={{
-                pagination: {
-                  paginationModel: { pageSize: 10, page: 0 },
-                },
-              }}
-              pageSizeOptions={[10, 25, 50]}
-              checkboxSelection
-              disableRowSelectionOnClick={false}
-              disableColumnMenu
-              getRowHeight={() => 75}
-              onRowClick={handleRowClick}
-              rowSelectionModel={selectionModel}
-              onRowSelectionModelChange={(newSelectionModel) => {
-                setSelectionModel(newSelectionModel);
-              }}
-              sx={{
-                border: 'none',
-                backgroundColor: '#fff',
-                cursor: 'pointer',
-                '& .MuiDataGrid-cell': {
-                  borderBottom: '1px solid #f0f0f0',
-                  py: 3,
-                  px: 2,
-                  fontSize: '1rem',
-                },
-                '& .MuiDataGrid-columnHeaders': {
-                  backgroundColor: '#f8f9fa',
-                  borderBottom: 'none',
-                  '& .MuiDataGrid-columnHeader': {
-                    py: 2,
-                    px: 2,
-                    '&:focus': {
-                      outline: 'none',
-                    },
-                    '& .MuiDataGrid-columnHeaderTitle': {
-                      fontFamily: 'Signika',
-                      fontWeight: 600,
-                      fontSize: '1.1rem',
-                      color: '#2c3e50',
-                    },
-                  },
-                },
-                '& .MuiDataGrid-row': {
-                  '&:hover': {
-                    backgroundColor: '#f8f9fa',
-                  },
-                  '&.Mui-selected': {
-                    backgroundColor: '#0083cb15',
-                    '&:hover': {
-                      backgroundColor: '#0083cb22',
-                    },
-                  },
-                },
-                '& .MuiCheckbox-root': {
-                  color: '#0083cb',
-                  '&.Mui-checked': {
-                    color: '#0083cb',
-                  },
-                },
-                '& .MuiDataGrid-footer': {
-                  borderTop: 'none',
-                  borderBottom: '1px solid #f0f0f0',
-                },
-                '& .MuiDataGrid-virtualScroller': {
-                  '& .MuiDataGrid-virtualScrollerContent': {
-                    height: '100% !important',
-                  },
-                },
-              }}
-            />
-          </Box>
-
-          <StudentFormDialog
-            open={openDialog}
-            onClose={handleCloseDialog}
-            formData={formData}
-            setFormData={setFormData}
-            handleSubmit={handleSubmit}
-            editingStudent={editingStudent}
-          />
-
-          <StudentProfileDialog
-            student={selectedStudent}
-            open={openProfile}
-            onClose={() => setOpenProfile(false)}
-          />
+              Supprimer ({selectionModel.length})
+            </Button>
+          )}
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleAdd}
+            sx={{
+              backgroundColor: theme.palette.primary.main,
+              borderRadius: '25px',
+              padding: '10px 24px',
+              '&:hover': {
+                backgroundColor: theme.palette.primary.dark,
+              },
+            }}
+          >
+            Ajouter un Enfant
+          </Button>
         </Box>
-      </div>
-    </div>
+      </Box>
+
+      <Box sx={{ 
+        flexGrow: 1,
+        width: '100%',
+        px: 3,
+        py: 2,
+      }}>
+        <DataGrid
+          rows={rows}
+          columns={columns}
+          pageSize={10}
+          rowsPerPageOptions={[10]}
+          checkboxSelection
+          disableSelectionOnClick
+          onSelectionModelChange={(newSelectionModel) => {
+            setSelectionModel(newSelectionModel);
+          }}
+          selectionModel={selectionModel}
+          onRowClick={handleRowClick}
+          autoHeight
+        />
+      </Box>
+
+      {openDialog && (
+        <StudentDialog
+          open={openDialog}
+          onClose={() => {
+            setOpenDialog(false);
+            setEditingStudent(null);
+          }}
+          student={editingStudent}
+          onSubmit={handleSubmit}
+        />
+      )}
+
+      {openProfile && selectedStudent && (
+        <StudentProfileDialog
+          open={openProfile}
+          onClose={() => {
+            setOpenProfile(false);
+            setSelectedStudent(null);
+          }}
+          student={selectedStudent}
+        />
+      )}
+    </Box>
   );
 };
 

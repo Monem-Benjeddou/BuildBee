@@ -7,6 +7,7 @@ export const colors = {
   success: '#8dc63f',    // Green
   warning: '#fff200',    // Yellow
   background: '#f5f5f5',
+  border: '#f0f0f0',
   text: '#333333',
 };
 
@@ -31,41 +32,39 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: 'Signika, sans-serif',
+    fontFamily: 'Signika, Arial, sans-serif',
     h1: {
-      fontFamily: 'Signika Regular, sans-serif',
-      fontWeight: 400,
+      fontFamily: 'Signika Regular, Arial, sans-serif',
+      fontWeight: 600,
     },
     h2: {
-      fontFamily: 'Signika Regular, sans-serif',
-      fontWeight: 400,
+      fontFamily: 'Signika Regular, Arial, sans-serif',
+      fontWeight: 600,
     },
     h3: {
-      fontFamily: 'Signika Regular, sans-serif',
-      fontWeight: 400,
+      fontFamily: 'Signika Regular, Arial, sans-serif',
+      fontWeight: 600,
     },
     h4: {
-      fontFamily: 'Signika Regular, sans-serif',
-      fontWeight: 400,
+      fontFamily: 'Signika Regular, Arial, sans-serif',
+      fontWeight: 600,
     },
     h5: {
-      fontFamily: 'Signika Regular, sans-serif',
-      fontWeight: 400,
+      fontFamily: 'Signika Regular, Arial, sans-serif',
+      fontWeight: 600,
     },
     h6: {
-      fontFamily: 'Signika Regular, sans-serif',
-      fontWeight: 400,
+      fontFamily: 'Signika Regular, Arial, sans-serif',
+      fontWeight: 600,
     },
     body1: {
-      fontFamily: 'Signika Light, sans-serif',
-      fontWeight: 300,
+      fontFamily: 'Signika Light, Arial, sans-serif',
     },
     body2: {
-      fontFamily: 'Signika Light, sans-serif',
-      fontWeight: 300,
+      fontFamily: 'Signika Light, Arial, sans-serif',
     },
     button: {
-      fontFamily: 'Signika Regular, sans-serif',
+      fontFamily: 'Signika Regular, Arial, sans-serif',
       fontWeight: 400,
       textTransform: 'none',
     },
@@ -74,9 +73,15 @@ const theme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 25,
-          padding: '10px 30px',
-          fontSize: '1rem',
+          borderRadius: '25px',
+          textTransform: 'none',
+          fontFamily: 'Signika Regular, Arial, sans-serif',
+        },
+        contained: {
+          backgroundColor: colors.primary,
+          '&:hover': {
+            backgroundColor: '#006ba3',
+          },
         },
       },
     },
@@ -84,7 +89,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           '& .MuiOutlinedInput-root': {
-            borderRadius: 25,
+            borderRadius: '12px',
             '& fieldset': {
               borderWidth: 2,
             },
@@ -109,6 +114,42 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 25,
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: '16px',
+        },
+      },
+    },
+    MuiDialog: {
+      styleOverrides: {
+        paper: {
+          borderRadius: '16px',
+        },
+      },
+    },
+    MuiDataGrid: {
+      styleOverrides: {
+        root: {
+          border: 'none',
+          '& .MuiDataGrid-cell': {
+            borderBottom: `1px solid ${colors.border}`,
+          },
+          '& .MuiDataGrid-columnHeaders': {
+            backgroundColor: colors.background,
+            borderBottom: 'none',
+          },
+          '& .MuiDataGrid-columnHeaderTitle': {
+            fontWeight: 600,
+            color: '#333',
+            fontFamily: 'Signika Regular, Arial, sans-serif',
+          },
+          '& .MuiDataGrid-row:hover': {
+            backgroundColor: colors.background,
+          },
         },
       },
     },
