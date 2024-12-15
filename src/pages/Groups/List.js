@@ -4,151 +4,178 @@ import {
   Button,
   IconButton,
   Typography,
-  useTheme,
   Tooltip,
+  Chip,
 } from '@mui/material';
-import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Event as EventIcon,
-} from '@mui/icons-material';
 import { DataGrid } from '@mui/x-data-grid';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import GroupIcon from '@mui/icons-material/Group';
+import EventIcon from '@mui/icons-material/Event';
+import { getAllGroups, deleteGroup, createGroup, updateGroup } from '../../services/groupService';
+import { getSessionById } from '../../services/sessionService';
 import GroupDialog from '../../components/GroupDialog';
-import { 
-  getAllGroups, 
-  deleteGroup, 
-  getGroupSessions 
-} from '../../services/groupService';
-import { format } from 'date-fns';
 
 const GroupList = () => {
-  const [rows, setRows] = useState([]);
+  const [groups, setGroups] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
-  const [editingGroup, setEditingGroup] = useState(null);
-  const theme = useTheme();
+  const [selectedGroup, setSelectedGroup] = useState(null);
+  const [sessionDetails, setSessionDetails] = useState({});
 
-  const formatSessionDateTime = (date) => {
-    return format(new Date(date), 'PPP p');
-  };
-
-  const loadData = async () => {
-    try {
-      const groups = await getAllGroups();
-      const groupsWithSessions = await Promise.all(groups.map(async (group) => {
-        try {
-          const sessions = await getGroupSessions(group.id);
-          const upcomingSessions = sessions
-            .filter(session => new Date(session.date) > new Date())
-            .sort((a, b) => new Date(a.date) - new Date(b.date));
-          
-          const nextSession = upcomingSessions[0];
-          const upcomingSessionsText = upcomingSessions
-            .slice(0, 3)
-            .map(session => formatSessionDateTime(session.date))
-            .join('\n');
-
-          return {
-            ...group,
-            nextSession: nextSession ? formatSessionDateTime(nextSession.date) : 'No upcoming sessions',
-            upcomingSessions: upcomingSessionsText || 'No upcoming sessions',
-            sessionCount: sessions.length
-          };
-        } catch (error) {
-          console.error(`Error fetching sessions for group ${group.id}:`, error);
-          return {
-            ...group,
-            nextSession: 'Error loading sessions',
-            upcomingSessions: 'Error loading sessions',
-            sessionCount: 0
+  const fetchSessionDetails = async (sessionIds) => {
+    const details = {};
+    for (const sessionId of sessionIds) {
+      try {
+        const session = await getSessionById(sessionId);
+        if (session) {
+          details[sessionId] = {
+            ...session,
+            formattedDateTime: new Date(session.date).toLocaleString('fr-FR', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })
           };
         }
-      }));
-      setRows(groupsWithSessions);
+      } catch (error) {
+        console.error('Error fetching session details:', error);
+      }
+    }
+    return details;
+  };
+
+  const loadGroups = async () => {
+    try {
+      setLoading(true);
+      const data = await getAllGroups();
+      
+      // Collect all unique session IDs
+      const allSessionIds = new Set();
+      data.forEach(group => {
+        if (group.sessionIds) {
+          group.sessionIds.forEach(id => allSessionIds.add(id));
+        }
+      });
+      
+      // Fetch session details
+      const details = await fetchSessionDetails(Array.from(allSessionIds));
+      setSessionDetails(details);
+      
+      setGroups(data);
     } catch (error) {
       console.error('Error loading groups:', error);
-      setRows([]);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadData();
+    loadGroups();
   }, []);
 
   const handleAdd = () => {
-    setEditingGroup(null);
+    setSelectedGroup(null);
     setOpenDialog(true);
   };
 
   const handleEdit = (group) => {
-    setEditingGroup(group);
+    setSelectedGroup(group);
     setOpenDialog(true);
   };
 
   const handleDelete = async (id) => {
-    try {
-      await deleteGroup(id);
-      loadData();
-    } catch (error) {
-      console.error('Error deleting group:', error);
+    if (window.confirm('Are you sure you want to delete this group?')) {
+      try {
+        await deleteGroup(id);
+        await loadGroups();
+      } catch (error) {
+        console.error('Error deleting group:', error);
+      }
     }
+  };
+
+  const handleDialogClose = async (formData) => {
+    if (formData) {
+      try {
+        if (selectedGroup) {
+          await updateGroup(selectedGroup.id, formData);
+        } else {
+          await createGroup(formData);
+        }
+        await loadGroups();
+      } catch (error) {
+        console.error('Error saving group:', error);
+      }
+    }
+    setOpenDialog(false);
+    setSelectedGroup(null);
   };
 
   const columns = [
     {
       field: 'name',
-      headerName: 'Nom du groupe',
+      headerName: 'Group Name',
       flex: 1,
-      renderCell: (params) => (
-        <Box sx={{ pl: 1 }}>
-          <Typography sx={{ fontFamily: 'Signika Light' }}>
-            {params.value}
-          </Typography>
-        </Box>
-      ),
-    },
-    {
-      field: 'level',
-      headerName: 'Niveau',
-      flex: 1,
-      headerAlign: 'center',
-      align: 'center',
-      renderCell: (params) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-          <Typography>
-            {params.value}
-          </Typography>
-        </Box>
-      ),
-    },
-    {
-      field: 'nextSession',
-      headerName: 'Prochaine séance',
-      flex: 1.5,
-      headerAlign: 'center',
-      align: 'center',
       renderCell: (params) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <EventIcon color="action" />
-          <Typography>
-            {params.value}
-          </Typography>
+          <GroupIcon color="primary" />
+          <Typography>{params.value}</Typography>
         </Box>
       ),
+    },
+    {
+      field: 'program',
+      headerName: 'Program',
+      flex: 1,
+    },
+    {
+      field: 'sessionIds',
+      headerName: 'Sessions',
+      flex: 2,
+      renderCell: (params) => {
+        const sessionIds = params.value || [];
+        
+        return (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+            {sessionIds.length > 0 ? (
+              sessionIds.map((sessionId) => {
+                const session = sessionDetails[sessionId];
+                return (
+                  <Chip
+                    key={sessionId}
+                    icon={<EventIcon />}
+                    label={session ? session.formattedDateTime : 'Loading...'}
+                    size="small"
+                    variant="outlined"
+                  />
+                );
+              })
+            ) : (
+              <Typography color="text.secondary" variant="body2">
+                No sessions
+              </Typography>
+            )}
+          </Box>
+        );
+      },
     },
     {
       field: 'actions',
       headerName: 'Actions',
       width: 120,
-      sortable: false,
       renderCell: (params) => (
         <Box>
-          <Tooltip title="Modifier">
+          <Tooltip title="Edit">
             <IconButton onClick={() => handleEdit(params.row)} size="small">
               <EditIcon />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Supprimer">
+          <Tooltip title="Delete">
             <IconButton onClick={() => handleDelete(params.row.id)} size="small" color="error">
               <DeleteIcon />
             </IconButton>
@@ -159,47 +186,35 @@ const GroupList = () => {
   ];
 
   return (
-    <Box sx={{ height: '100%', width: '100%', p: 2 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-        <Typography variant="h5" sx={{ fontFamily: 'Signika' }}>
-          Groupes
-        </Typography>
+    <Box sx={{ height: '100%', width: '100%', p: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+        <Typography variant="h4" sx={{ fontFamily: 'Signika' }}>Gestion des Groupes</Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={handleAdd}
-          sx={{ fontFamily: 'Signika Light' }}
         >
-          Nouveau groupe
+          Ajouter un Groupe
         </Button>
       </Box>
-      
+
       <DataGrid
-        rows={rows}
+        rows={groups}
         columns={columns}
         pageSize={10}
         rowsPerPageOptions={[10]}
         disableSelectionOnClick
-        sx={{
-          '& .MuiDataGrid-cell:focus': {
-            outline: 'none',
-          },
-        }}
+        autoHeight
+        loading={loading}
+        getRowId={(row) => row._id}
       />
-      
+
       {openDialog && (
         <GroupDialog
           open={openDialog}
-          onClose={() => {
-            setOpenDialog(false);
-            setEditingGroup(null);
-          }}
-          onSave={() => {
-            setOpenDialog(false);
-            setEditingGroup(null);
-            loadData();
-          }}
-          group={editingGroup}
+          onClose={() => setOpenDialog(false)}
+          group={selectedGroup}
+          onSubmit={handleDialogClose}
         />
       )}
     </Box>

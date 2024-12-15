@@ -4,43 +4,62 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
   Button,
-  Grid,
+  TextField,
+  Box,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  Box,
   Typography,
-  IconButton,
+  Chip,
+  OutlinedInput,
 } from '@mui/material';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { TimePicker } from '@mui/x-date-pickers/TimePicker';
-import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import { format } from 'date-fns';
+import EventIcon from '@mui/icons-material/Event';
+import { getUpcomingSessions } from '../services/sessionService';
 
 const GroupDialog = ({ open, onClose, group, onSubmit }) => {
   const [formData, setFormData] = useState({
     name: '',
     program: '',
-    sessions: []
+    description: '',
+    sessionIds: []
   });
+  const [availableSessions, setAvailableSessions] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const loadSessions = async () => {
+      try {
+        setLoading(true);
+        const sessions = await getUpcomingSessions();
+        setAvailableSessions(sessions);
+      } catch (error) {
+        console.error('Error loading sessions:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (open) {
+      loadSessions();
+    }
+  }, [open]);
 
   useEffect(() => {
     if (group) {
       setFormData({
         name: group.name || '',
         program: group.program || '',
-        sessions: group.sessions || []
+        description: group.description || '',
+        sessionIds: group.sessionIds || []
       });
     } else {
       setFormData({
         name: '',
         program: '',
-        sessions: []
+        description: '',
+        sessionIds: []
       });
     }
   }, [group]);
@@ -53,173 +72,131 @@ const GroupDialog = ({ open, onClose, group, onSubmit }) => {
     }));
   };
 
-  const handleAddSession = () => {
+  const handleSessionChange = (event) => {
+    const {
+      target: { value },
+    } = event;
     setFormData(prev => ({
       ...prev,
-      sessions: [
-        ...prev.sessions,
-        {
-          date: new Date(),
-          time: '14:00',
-          location: '',
-          status: 'upcoming'
-        }
-      ]
-    }));
-  };
-
-  const handleRemoveSession = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      sessions: prev.sessions.filter((_, i) => i !== index)
-    }));
-  };
-
-  const handleSessionChange = (index, field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      sessions: prev.sessions.map((session, i) => {
-        if (i === index) {
-          return {
-            ...session,
-            [field]: value
-          };
-        }
-        return session;
-      })
+      sessionIds: typeof value === 'string' ? value.split(',') : value,
     }));
   };
 
   const handleSubmit = () => {
-    // Format sessions before submitting
-    const formattedData = {
-      ...formData,
-      sessions: formData.sessions.map(session => ({
-        ...session,
-        date: format(new Date(session.date), 'yyyy-MM-dd'),
-        time: typeof session.time === 'object' 
-          ? format(session.time, 'HH:mm')
-          : session.time
-      }))
-    };
-    onSubmit(formattedData);
+    if (!formData.name || !formData.description) {
+      alert('Tous les champs sont obligatoires');
+      return;
+    }
+
+    if (typeof onSubmit === 'function') {
+      onSubmit(formData);
+    } else {
+      console.error('onSubmit is not a function in GroupDialog');
+      return;
+    }
+    
+    if (typeof onClose === 'function') {
+      onClose();
+    }
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
-        {group ? 'Edit Group' : 'New Group'}
+        <Typography variant="h6" sx={{ fontFamily: 'Signika' }}>
+          {group ? 'Modifier le groupe' : 'Nouveau groupe'}
+        </Typography>
       </DialogTitle>
       <DialogContent>
-        <Grid container spacing={2} sx={{ mt: 1 }}>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              name="name"
-              label="Group Name"
-              fullWidth
-              value={formData.name}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+          <TextField
+            name="name"
+            label="Nom du groupe"
+            value={formData.name}
+            onChange={handleChange}
+            fullWidth
+            required
+          />
+          
+          <TextField
+            name="description"
+            label="Description"
+            value={formData.description}
+            onChange={handleChange}
+            fullWidth
+            required
+            multiline
+            rows={3}
+          />
+
+          <FormControl fullWidth>
+            <InputLabel>Programme</InputLabel>
+            <Select
+              name="program"
+              value={formData.program}
+              label="Programme"
               onChange={handleChange}
-              required
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth>
-              <InputLabel>Program</InputLabel>
-              <Select
-                name="program"
-                value={formData.program}
-                label="Program"
-                onChange={handleChange}
-                required
-              >
-                <MenuItem value="Robotics">Robotics</MenuItem>
-                <MenuItem value="Programming">Programming</MenuItem>
-                <MenuItem value="Electronics">Electronics</MenuItem>
-                <MenuItem value="3D Printing">3D Printing</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
+            >
+              <MenuItem value="Standard">Standard</MenuItem>
+              <MenuItem value="Intensif">Intensif</MenuItem>
+              <MenuItem value="Spécial">Spécial</MenuItem>
+            </Select>
+          </FormControl>
 
-          <Grid item xs={12}>
-            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="h6">Sessions</Typography>
-              <Button
-                startIcon={<AddIcon />}
-                onClick={handleAddSession}
-                variant="outlined"
-              >
-                Add Session
-              </Button>
-            </Box>
-
-            {formData.sessions.map((session, index) => (
-              <Box
-                key={index}
-                sx={{
-                  p: 2,
-                  mb: 2,
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  borderRadius: 1,
-                  position: 'relative'
-                }}
-              >
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={4}>
-                    <LocalizationProvider dateAdapter={AdapterDateFns}>
-                      <DatePicker
-                        label="Date"
-                        value={new Date(session.date)}
-                        onChange={(newValue) => {
-                          handleSessionChange(index, 'date', newValue);
-                        }}
-                        renderInput={(params) => <TextField {...params} fullWidth />}
+          <FormControl fullWidth>
+            <InputLabel>Sessions</InputLabel>
+            <Select
+              multiple
+              name="sessionIds"
+              value={formData.sessionIds}
+              onChange={handleSessionChange}
+              input={<OutlinedInput label="Sessions" />}
+              renderValue={(selected) => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {selected.map((value) => {
+                    const session = availableSessions.find(s => s.id === value);
+                    return (
+                      <Chip 
+                        key={value} 
+                        label={session ? new Date(session.date).toLocaleString('fr-FR', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        }) : value}
+                        icon={<EventIcon />}
                       />
-                    </LocalizationProvider>
-                  </Grid>
-                  <Grid item xs={12} sm={4}>
-                    <LocalizationProvider dateAdapter={AdapterDateFns}>
-                      <TimePicker
-                        label="Time"
-                        value={typeof session.time === 'string' 
-                          ? new Date(`2000-01-01T${session.time}`) 
-                          : session.time}
-                        onChange={(newValue) => {
-                          handleSessionChange(index, 'time', newValue);
-                        }}
-                        renderInput={(params) => <TextField {...params} fullWidth />}
-                      />
-                    </LocalizationProvider>
-                  </Grid>
-                  <Grid item xs={12} sm={4}>
-                    <TextField
-                      label="Location"
-                      fullWidth
-                      value={session.location}
-                      onChange={(e) => handleSessionChange(index, 'location', e.target.value)}
-                    />
-                  </Grid>
-                </Grid>
-                <IconButton
-                  onClick={() => handleRemoveSession(index)}
-                  sx={{
-                    position: 'absolute',
-                    top: 8,
-                    right: 8,
-                    color: 'error.main'
-                  }}
-                >
-                  <DeleteIcon />
-                </IconButton>
-              </Box>
-            ))}
-          </Grid>
-        </Grid>
+                    );
+                  })}
+                </Box>
+              )}
+            >
+              {availableSessions.map((session) => (
+                <MenuItem key={session.id} value={session.id}>
+                  {new Date(session.date).toLocaleString('fr-FR', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button onClick={handleSubmit} variant="contained" color="primary">
-          {group ? 'Update' : 'Create'}
+        <Button onClick={onClose}>Annuler</Button>
+        <Button 
+          onClick={handleSubmit} 
+          variant="contained" 
+          disabled={loading || !formData.name || !formData.description}
+        >
+          {loading ? 'Chargement...' : group ? 'Modifier' : 'Créer'}
         </Button>
       </DialogActions>
     </Dialog>

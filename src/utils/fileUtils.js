@@ -47,20 +47,6 @@ export const apiDelete = async (endpoint) => {
   return handleResponse(response);
 };
 
-// Initialize data from data.json if not in API
-const initializeData = async () => {
-  try {
-    const storedData = await apiGet('/data');
-    if (!storedData) {
-      await apiPost('/data', initialData);
-    }
-  } catch (error) {
-    console.error('Error initializing data:', error);
-  }
-};
-
-initializeData();
-
 export const getData = async () => {
   try {
     return await apiGet('/data');

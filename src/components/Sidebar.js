@@ -18,6 +18,7 @@ import {
   EmojiEvents as StickersIcon,
   People as PeopleIcon,
   Event as EventIcon,
+  AssignmentTurnedIn as PresenceIcon,
 } from '@mui/icons-material';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { colors } from '../styles/theme';
@@ -52,6 +53,11 @@ const menuItems = [
     text: 'Présence',
     icon: <CalendarIcon />,
     path: '/attendance'
+  },
+  {
+    text: 'Présences',
+    icon: <PresenceIcon />,
+    path: '/presence'
   },
   {
     text: 'Paiements',
