@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import '../styles/sidebar.css';
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -7,6 +8,11 @@ import GroupIcon from '@mui/icons-material/Group';
 import SettingsIcon from '@mui/icons-material/Settings';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import LogoutIcon from '@mui/icons-material/Logout';
+import EventIcon from '@mui/icons-material/Event';
+import PaymentsIcon from '@mui/icons-material/Payments';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import { useAuth } from '../context/AuthContext';
 
 const Sidebar = () => {
@@ -16,6 +22,13 @@ const Sidebar = () => {
 
   const menuItems = [
     { path: '/dashboard', icon: <DashboardIcon />, text: 'Dashboard' },
+    { path: '/students', icon: <SchoolIcon />, text: 'Élèves' },
+    { path: '/sessions', icon: <EventIcon />, text: 'Sessions' },
+    { path: '/groups', icon: <GroupIcon />, text: 'Groupes' },
+    { path: '/attendance', icon: <CalendarMonthIcon />, text: 'Présence' },
+    { path: '/presence', icon: <AssignmentTurnedInIcon />, text: 'Présences' },
+    { path: '/payments', icon: <PaymentsIcon />, text: 'Paiements' },
+    { path: '/stickers', icon: <EmojiEventsIcon />, text: 'Gommettes' },
     { path: '/programs', icon: <SchoolIcon />, text: 'Gestion des programmes' },
     { path: '/users', icon: <GroupIcon />, text: 'Gestion des utilisateurs' },
     { path: '/settings', icon: <SettingsIcon />, text: 'Paramètres' },
@@ -56,7 +69,6 @@ const Sidebar = () => {
             {item.icon}
             <span className="menu-text">{item.text}</span>
           </Link>
-
         ))}
       </nav>
 

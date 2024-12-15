@@ -1,6 +1,6 @@
 import initialData from '../data/data.json';
 
-const API_BASE_URL = 'http://localhost:3001/api';
+const API_BASE_URL = 'http://localhost:4005/api';
 
 export const handleResponse = async (response) => {
   if (!response.ok) {
@@ -46,20 +46,6 @@ export const apiDelete = async (endpoint) => {
   });
   return handleResponse(response);
 };
-
-// Initialize data from data.json if not in API
-const initializeData = async () => {
-  try {
-    const storedData = await apiGet('/data');
-    if (!storedData) {
-      await apiPost('/data', initialData);
-    }
-  } catch (error) {
-    console.error('Error initializing data:', error);
-  }
-};
-
-initializeData();
 
 export const getData = async () => {
   try {

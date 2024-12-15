@@ -34,9 +34,14 @@ const StudentDialog = ({ open, onClose, student, onSubmit }) => {
   const [groups, setGroups] = useState([]);
 
   useEffect(() => {
-    const loadGroups = () => {
-      const allGroups = getAllGroups();
-      setGroups(allGroups);
+    const loadGroups = async () => {
+      try {
+        const allGroups = await getAllGroups();
+        setGroups(allGroups || []);
+      } catch (error) {
+        console.error('Error loading groups:', error);
+        setGroups([]);
+      }
     };
     loadGroups();
   }, []);
@@ -146,18 +151,22 @@ const StudentDialog = ({ open, onClose, student, onSubmit }) => {
           <Grid item xs={12}>
             <Autocomplete
               multiple
-              value={groups.filter(group => formData.groupIds.includes(group.id))}
+              value={(groups || []).filter(group => 
+                Array.isArray(formData.groupIds) && 
+                formData.groupIds.includes(group.id)
+              )}
               onChange={(event, newValue) => {
                 setFormData(prev => ({
                   ...prev,
                   groupIds: newValue.map(group => group.id)
                 }));
               }}
-              options={groups}
-              getOptionLabel={(option) => option.name}
+              options={groups || []}
+              getOptionLabel={(option) => option?.name || ''}
               renderTags={(value, getTagProps) =>
                 value.map((option, index) => (
                   <Chip
+                    key={option.id}
                     label={option.name}
                     {...getTagProps({ index })}
                   />

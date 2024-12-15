@@ -27,15 +27,23 @@ export const getSessionById = async (id) => {
 
 // Create new session
 export const createSession = async (sessionData) => {
+  if (!sessionData.name || !sessionData.date || !sessionData.duration || 
+      !sessionData.location || !sessionData.description || !sessionData.groupId) {
+    throw new Error('All fields are required: name, date, duration, location, description, and group');
+  }
+
   // Ensure required fields and proper format
   const session = await apiPost('/sessions', {
-    name: sessionData.name,
-    date: sessionData.date.toISOString().split('T')[0], // Format: YYYY-MM-DD
+    name: sessionData.name.trim(),
+    date: sessionData.date instanceof Date 
+      ? sessionData.date.toISOString()  // Keep full ISO string for proper datetime
+      : new Date(sessionData.date).toISOString(), // Convert string to proper ISO date
     duration: parseInt(sessionData.duration),
-    location: sessionData.location,
-    description: sessionData.description || '',
-    status: 'upcoming', // Default status for new sessions
-    groupId: sessionData.groupId
+    location: sessionData.location.trim(),
+    description: sessionData.description.trim(),
+    status: 'upcoming',
+    groupId: sessionData.groupId,
+    attendance: [] // Initialize empty attendance array
   });
   return transformSession(session);
 };
@@ -69,15 +77,33 @@ export const getSessionAttendance = async (id) => {
 
 // Mark attendance
 export const markAttendance = async (id, studentIds) => {
-  return apiPost(`/sessions/${id}/attendance`, {
-    attendance: studentIds
-  });
+  if (!id || !Array.isArray(studentIds)) {
+    throw new Error('Invalid parameters for marking attendance');
+  }
+  const session = await apiPut(`/sessions/${id}`, { attendance: studentIds });
+  return transformSession(session);
 };
 
 // Get upcoming sessions
 export const getUpcomingSessions = async () => {
-  const sessions = await apiGet('/sessions/upcoming');
-  return transformSessions(sessions);
+  const allSessions = await apiGet('/sessions');
+  const now = new Date();
+  
+  // Filter sessions that are in the future
+  const upcomingSessions = allSessions.filter(session => {
+    const sessionDate = new Date(session.date);
+    return sessionDate > now || (
+      sessionDate.getDate() === now.getDate() &&
+      sessionDate.getMonth() === now.getMonth() &&
+      sessionDate.getFullYear() === now.getFullYear() &&
+      session.status === 'upcoming'
+    );
+  });
+  
+  // Sort by date, earliest first
+  upcomingSessions.sort((a, b) => new Date(a.date) - new Date(b.date));
+  
+  return transformSessions(upcomingSessions);
 };
 
 // Get completed sessions

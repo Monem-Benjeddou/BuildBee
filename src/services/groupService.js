@@ -2,9 +2,25 @@ import { apiGet, apiPost, apiPut, apiDelete } from '../utils/fileUtils';
 
 const transformGroup = (group) => {
   if (!group) return null;
+  
+  // Transform sessions if they exist
+  const sessions = group.sessions?.map(session => ({
+    ...session,
+    id: session._id,
+    formattedDateTime: new Date(session.date).toLocaleString('fr-FR', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  })) || [];
+
   return {
     ...group,
-    id: group._id
+    id: group._id,
+    sessions
   };
 };
 
@@ -14,12 +30,12 @@ const transformGroups = (groups) => {
 };
 
 export const getAllGroups = async () => {
-  const groups = await apiGet('/groups');
+  const groups = await apiGet('/groups?populate=sessions');
   return transformGroups(groups);
 };
 
 export const getGroup = async (id) => {
-  const group = await apiGet(`/groups/${id}`);
+  const group = await apiGet(`/groups/${id}?populate=sessions`);
   return transformGroup(group);
 };
 

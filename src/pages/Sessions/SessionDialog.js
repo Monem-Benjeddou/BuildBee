@@ -26,6 +26,7 @@ const SessionDialog = ({ open, onClose, session }) => {
     groupId: '',
   });
   const [groups, setGroups] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     loadGroups();
@@ -66,11 +67,23 @@ const SessionDialog = ({ open, onClose, session }) => {
   };
 
   const handleSubmit = () => {
+    // Validate required fields
+    if (!formData.name || !formData.date || !formData.duration || 
+        !formData.location || !formData.description || !formData.groupId) {
+      alert('Please fill in all required fields');
+      return;
+    }
+    
+    // Pass the form data back to parent component
     onClose(formData);
   };
 
+  const handleCancel = () => {
+    onClose();
+  };
+
   return (
-    <Dialog open={open} onClose={() => onClose()} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={handleCancel} maxWidth="sm" fullWidth>
       <DialogTitle>
         {session ? 'Edit Session' : 'Add New Session'}
       </DialogTitle>
@@ -150,11 +163,12 @@ const SessionDialog = ({ open, onClose, session }) => {
             multiline
             rows={4}
             margin="normal"
+            required
           />
         </FormControl>
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => onClose()}>Cancel</Button>
+        <Button onClick={handleCancel}>Cancel</Button>
         <Button onClick={handleSubmit} variant="contained" color="primary">
           {session ? 'Update' : 'Create'}
         </Button>
