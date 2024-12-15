@@ -17,6 +17,7 @@ import { getAllSessions, deleteSession, createSession, updateSession } from '../
 import SessionDialog from './SessionDialog';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import '../../styles/table.css';
 
 const SessionsList = () => {
   const [sessions, setSessions] = useState([]);
@@ -100,33 +101,19 @@ const SessionsList = () => {
 
   const columns = [
     {
-      field: 'name',
-      headerName: 'Nom',
-      flex: 1,
-      renderHeader: (params) => (
-        <Typography sx={{ fontWeight: 600, fontFamily: 'Signika' }}>
-          {params.colDef.headerName}
-        </Typography>
-      ),
-    },
-    {
       field: 'formattedDate',
-      headerName: 'Date et Heure',
+      headerName: 'Date et heure',
       flex: 1,
       renderHeader: (params) => (
-        <Typography sx={{ fontWeight: 600, fontFamily: 'Signika' }}>
+        <Typography className="table-header-cell">
           {params.colDef.headerName}
         </Typography>
       ),
-    },
-    {
-      field: 'duration',
-      headerName: 'Durée (min)',
-      width: 130,
-      renderHeader: (params) => (
-        <Typography sx={{ fontWeight: 600, fontFamily: 'Signika' }}>
-          {params.colDef.headerName}
-        </Typography>
+      renderCell: (params) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <EventIcon sx={{ color: '#64748B' }} />
+          <Typography>{params.value}</Typography>
+        </Box>
       ),
     },
     {
@@ -134,13 +121,13 @@ const SessionsList = () => {
       headerName: 'Lieu',
       flex: 1,
       renderHeader: (params) => (
-        <Typography sx={{ fontWeight: 600, fontFamily: 'Signika' }}>
+        <Typography className="table-header-cell">
           {params.colDef.headerName}
         </Typography>
       ),
       renderCell: (params) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <LocationOnIcon sx={{ color: '#0083cb' }} />
+          <LocationOnIcon sx={{ color: '#64748B' }} />
           <Typography>{params.value}</Typography>
         </Box>
       ),
@@ -148,42 +135,35 @@ const SessionsList = () => {
     {
       field: 'status',
       headerName: 'Statut',
-      width: 130,
+      flex: 1,
       renderHeader: (params) => (
-        <Typography sx={{ fontWeight: 600, fontFamily: 'Signika' }}>
+        <Typography className="table-header-cell">
           {params.colDef.headerName}
         </Typography>
       ),
       renderCell: (params) => (
         <Chip
           label={getStatusLabel(params.value)}
+          className={`status-chip ${params.value}`}
           sx={{
             backgroundColor: `${getStatusColor(params.value)}20`,
             color: getStatusColor(params.value),
-            fontFamily: 'Signika',
-            '& .MuiChip-label': {
-              fontWeight: 500,
-            },
           }}
         />
       ),
     },
     {
       field: 'actions',
-      headerName: 'Actions',
+      headerName: '',
       width: 120,
       sortable: false,
-      renderHeader: (params) => (
-        <Typography sx={{ fontWeight: 600, fontFamily: 'Signika' }}>
-          {params.colDef.headerName}
-        </Typography>
-      ),
       renderCell: (params) => (
-        <Box>
+        <div className="table-actions">
           <Tooltip title="Modifier">
             <IconButton
               onClick={() => handleEdit(params.row)}
-              sx={{ color: '#0083cb' }}
+              size="small"
+              sx={{ color: '#64748B' }}
             >
               <EditIcon />
             </IconButton>
@@ -191,58 +171,45 @@ const SessionsList = () => {
           <Tooltip title="Supprimer">
             <IconButton
               onClick={() => handleDelete(params.row.id)}
-              sx={{ color: '#ed174c' }}
+              size="small"
+              sx={{ color: '#64748B' }}
             >
               <DeleteIcon />
             </IconButton>
           </Tooltip>
-        </Box>
+        </div>
       ),
     },
   ];
 
   return (
     <Box sx={{ height: '100%', width: '100%', p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" sx={{ fontFamily: 'Signika', fontWeight: 600 }}>
-          Sessions
-        </Typography>
+      <div className="table-header">
+        <div>
+          <Typography variant="h4" className="table-title">
+            Gestion des sessions
+          </Typography>
+          <Typography variant="body1" className="table-subtitle">
+            Planification et suivi des sessions
+          </Typography>
+        </div>
         <AddButton onClick={handleAdd}>
-          Nouvelle Session
+          Nouvelle session
         </AddButton>
-      </Box>
+      </div>
 
       <DataGrid
         rows={sessions}
         columns={columns}
-        loading={loading}
+        pageSize={10}
+        rowsPerPageOptions={[10]}
         checkboxSelection
-        disableRowSelectionOnClick
-        selectionModel={selectionModel}
-        onSelectionModelChange={(newSelectionModel) => {
-          setSelectionModel(newSelectionModel);
-        }}
+        disableSelectionOnClick
+        loading={loading}
+        autoHeight
         sx={{
-          border: 'none',
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.05)',
-          '& .MuiDataGrid-cell': {
-            borderBottom: '1px solid #f0f0f0',
-            fontFamily: 'Signika',
-          },
-          '& .MuiDataGrid-columnHeaders': {
-            backgroundColor: '#f9fafb',
-            borderBottom: 'none',
-          },
-          '& .MuiDataGrid-columnHeaderTitle': {
-            fontWeight: 600,
-          },
-          '& .MuiCheckbox-root': {
-            color: '#0083cb',
-          },
-          '& .MuiCheckbox-root.Mui-checked': {
-            color: '#0083cb',
+          '& .MuiDataGrid-cell:focus': {
+            outline: 'none',
           },
         }}
       />
