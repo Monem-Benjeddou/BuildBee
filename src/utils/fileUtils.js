@@ -10,7 +10,6 @@ const initializeData = () => {
   }
 };
 
-// Initialize on import
 initializeData();
 
 export const getData = () => {
