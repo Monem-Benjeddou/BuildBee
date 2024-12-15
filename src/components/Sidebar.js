@@ -1,96 +1,77 @@
 import React from 'react';
-import {
-  Drawer,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Typography,
-  Box,
-} from '@mui/material';
-import {
-  People,
-  Person,
-  DateRange,
-  AttachMoney,
-  Star,
-} from '@mui/icons-material';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { colors } from '../styles/theme';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import '../styles/sidebar.css';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import SchoolIcon from '@mui/icons-material/School';
+import GroupIcon from '@mui/icons-material/Group';
+import SettingsIcon from '@mui/icons-material/Settings';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import LogoutIcon from '@mui/icons-material/Logout';
+import { useAuth } from '../context/AuthContext';
 
-const menuItems = [
-  { text: 'Student List', icon: People, path: '/students' },
-  { text: 'Student Profile', icon: Person, path: '/profile' },
-  { text: 'Attendance Tracker', icon: DateRange, path: '/attendance' },
-  { text: 'Payment History', icon: AttachMoney, path: '/payments' },
-  { text: 'Model Stickers', icon: Star, path: '/stickers' },
-];
-
-const Sidebar = ({ drawerWidth, isOpen, onDrawerToggle }) => {
-  const navigate = useNavigate();
+const Sidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { currentUser, logout } = useAuth();
+
+  const menuItems = [
+    { path: '/dashboard', icon: <DashboardIcon />, text: 'Dashboard' },
+    { path: '/programs', icon: <SchoolIcon />, text: 'Gestion des programmes' },
+    { path: '/users', icon: <GroupIcon />, text: 'Gestion des utilisateurs' },
+    { path: '/settings', icon: <SettingsIcon />, text: 'Paramètres' },
+  ];
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Failed to log out:', error);
+    }
+  };
 
   return (
-    <Drawer
-      variant="permanent"
-      sx={{
-        width: drawerWidth,
-        flexShrink: 0,
-        '& .MuiDrawer-paper': {
-          width: drawerWidth,
-          boxSizing: 'border-box',
-          backgroundColor: '#f5f5f5',
-        },
-      }}
-      open={isOpen}
-    >
-      <Box sx={{ p: 2, mt: 8 }}>
-        <Typography
-          variant="h6"
-          sx={{
-            color: colors.primary,
-            fontWeight: 'bold',
-            textAlign: 'center',
-            mb: 2,
-          }}
-        >
-          Student Manager
-        </Typography>
-      </Box>
-      <List>
+    <div className="sidebar">
+      <div className="sidebar-logo">
+        <div className="logo-icon">
+          <div className="logo-dots">
+            <div className="logo-dot"></div>
+            <div className="logo-dot"></div>
+          </div>
+          <div className="logo-bar"></div>
+        </div>
+        <div className="logo-text">
+          <span className="logo-title">LOGO</span>
+          <span className="logo-slogan">YOUR SLOGAN HERE</span>
+        </div>
+      </div>
+
+      <nav className="sidebar-menu">
         {menuItems.map((item) => (
-          <ListItem
-            button
-            key={item.text}
-            onClick={() => navigate(item.path)}
-            sx={{
-              backgroundColor:
-                location.pathname === item.path ? 'rgba(0, 131, 203, 0.08)' : 'transparent',
-              '&:hover': {
-                backgroundColor: 'rgba(0, 131, 203, 0.15)',
-              },
-            }}
+          <Link
+            key={item.path}
+            to={item.path}
+            className={`menu-item ${location.pathname === item.path ? 'active' : ''}`}
           >
-            <ListItemIcon
-              sx={{
-                color: location.pathname === item.path ? colors.primary : 'grey.700',
-              }}
-            >
-              <item.icon />
-            </ListItemIcon>
-            <ListItemText
-              primary={item.text}
-              sx={{
-                '& .MuiTypography-root': {
-                  color: location.pathname === item.path ? colors.primary : 'grey.700',
-                  fontWeight: location.pathname === item.path ? 600 : 400,
-                },
-              }}
-            />
-          </ListItem>
+            {item.icon}
+            <span className="menu-text">{item.text}</span>
+          </Link>
         ))}
-      </List>
-    </Drawer>
+      </nav>
+
+      <div className="sidebar-footer">
+        <Link to="/profile" className="menu-item">
+          <AccountCircleIcon />
+          <span className="menu-text">
+            {currentUser?.email || 'Mon compte'}
+          </span>
+        </Link>
+        <button onClick={handleLogout} className="menu-item logout-btn">
+          <LogoutIcon />
+          <span className="menu-text">Déconnexion</span>
+        </button>
+      </div>
+    </div>
   );
 };
 

@@ -7,6 +7,7 @@ import {
   IconButton,
   Tooltip,
   Checkbox,
+  TextField,
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import {
@@ -18,7 +19,7 @@ import {
 import { students as initialRows } from '../../data/students';
 import StudentFormDialog from '../../components/StudentFormDialog';
 import StudentProfileDialog from '../../components/StudentProfileDialog';
-import { getGroupColor } from '../../utils/colors';
+import '../../styles/layout.css';
 
 const StudentList = () => {
   const [rows, setRows] = useState(initialRows);
@@ -164,8 +165,8 @@ const StudentList = () => {
         }}>
           <Box
             sx={{
-              backgroundColor: `${getGroupColor(params.value)}15`,
-              color: getGroupColor(params.value),
+              backgroundColor: '#f0f0f0',
+              color: '#2c3e50',
               py: 1,
               px: 2,
               borderRadius: '20px',
@@ -244,164 +245,168 @@ const StudentList = () => {
   ];
 
   return (
-    <Box sx={{ 
-      height: '100%', 
-      width: '100%', 
-      display: 'flex',
-      flexDirection: 'column',
-    }}>
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        px: 3,
-        py: 2,
-        borderBottom: '1px solid #f0f0f0',
-        backgroundColor: '#fff',
-      }}>
-        <Typography 
-          variant="h4" 
-          sx={{ 
-            color: '#0083cb', 
-            fontWeight: 600, 
-            fontFamily: 'Signika',
-            fontSize: { xs: '1.8rem', sm: '2.2rem', md: '2.5rem' },
-          }}
-        >
-          Gestion des Enfants
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          {selectionModel.length > 0 && (
-            <Button
-              variant="contained"
-              startIcon={<DeleteSweepIcon />}
-              onClick={handleDeleteSelected}
-              sx={{
-                backgroundColor: '#ed174c',
-                borderRadius: '25px',
-                padding: '10px 24px',
-                '&:hover': {
-                  backgroundColor: '#d41543',
-                },
+    <div className="main-layout">
+      <div className="main-content">
+        <Box sx={{ 
+          height: '100%', 
+          width: '100%', 
+          display: 'flex',
+          flexDirection: 'column',
+        }}>
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            px: 3,
+            py: 2,
+            borderBottom: '1px solid #f0f0f0',
+            backgroundColor: '#fff',
+          }}>
+            <Typography 
+              variant="h4" 
+              sx={{ 
+                color: '#0083cb', 
+                fontWeight: 600, 
+                fontFamily: 'Signika',
+                fontSize: { xs: '1.8rem', sm: '2.2rem', md: '2.5rem' },
               }}
             >
-              Supprimer ({selectionModel.length})
-            </Button>
-          )}
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleOpenDialog}
-            sx={{
-              backgroundColor: '#0083cb',
-              borderRadius: '25px',
-              padding: '10px 24px',
-              '&:hover': {
-                backgroundColor: '#006ba3',
-              },
-            }}
-          >
-            Ajouter un Enfant
-          </Button>
+              Gestion des Enfants
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              {selectionModel.length > 0 && (
+                <Button
+                  variant="contained"
+                  startIcon={<DeleteSweepIcon />}
+                  onClick={handleDeleteSelected}
+                  sx={{
+                    backgroundColor: '#ed174c',
+                    borderRadius: '25px',
+                    padding: '10px 24px',
+                    '&:hover': {
+                      backgroundColor: '#d41543',
+                    },
+                  }}
+                >
+                  Supprimer ({selectionModel.length})
+                </Button>
+              )}
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={handleOpenDialog}
+                sx={{
+                  backgroundColor: '#0083cb',
+                  borderRadius: '25px',
+                  padding: '10px 24px',
+                  '&:hover': {
+                    backgroundColor: '#006ba3',
+                  },
+                }}
+              >
+                Ajouter un Enfant
+              </Button>
+            </Box>
+          </Box>
+
+          <Box sx={{ 
+            flexGrow: 1,
+            width: '100%',
+            px: 3,
+            py: 2,
+          }}>
+            <DataGrid
+              rows={rows}
+              columns={columns}
+              initialState={{
+                pagination: {
+                  paginationModel: { pageSize: 10, page: 0 },
+                },
+              }}
+              pageSizeOptions={[10, 25, 50]}
+              checkboxSelection
+              disableRowSelectionOnClick={false}
+              disableColumnMenu
+              getRowHeight={() => 75}
+              onRowClick={handleRowClick}
+              rowSelectionModel={selectionModel}
+              onRowSelectionModelChange={(newSelectionModel) => {
+                setSelectionModel(newSelectionModel);
+              }}
+              sx={{
+                border: 'none',
+                backgroundColor: '#fff',
+                cursor: 'pointer',
+                '& .MuiDataGrid-cell': {
+                  borderBottom: '1px solid #f0f0f0',
+                  py: 3,
+                  px: 2,
+                  fontSize: '1rem',
+                },
+                '& .MuiDataGrid-columnHeaders': {
+                  backgroundColor: '#f8f9fa',
+                  borderBottom: 'none',
+                  '& .MuiDataGrid-columnHeader': {
+                    py: 2,
+                    px: 2,
+                    '&:focus': {
+                      outline: 'none',
+                    },
+                    '& .MuiDataGrid-columnHeaderTitle': {
+                      fontFamily: 'Signika',
+                      fontWeight: 600,
+                      fontSize: '1.1rem',
+                      color: '#2c3e50',
+                    },
+                  },
+                },
+                '& .MuiDataGrid-row': {
+                  '&:hover': {
+                    backgroundColor: '#f8f9fa',
+                  },
+                  '&.Mui-selected': {
+                    backgroundColor: '#0083cb15',
+                    '&:hover': {
+                      backgroundColor: '#0083cb22',
+                    },
+                  },
+                },
+                '& .MuiCheckbox-root': {
+                  color: '#0083cb',
+                  '&.Mui-checked': {
+                    color: '#0083cb',
+                  },
+                },
+                '& .MuiDataGrid-footer': {
+                  borderTop: 'none',
+                  borderBottom: '1px solid #f0f0f0',
+                },
+                '& .MuiDataGrid-virtualScroller': {
+                  '& .MuiDataGrid-virtualScrollerContent': {
+                    height: '100% !important',
+                  },
+                },
+              }}
+            />
+          </Box>
+
+          <StudentFormDialog
+            open={openDialog}
+            onClose={handleCloseDialog}
+            formData={formData}
+            setFormData={setFormData}
+            handleSubmit={handleSubmit}
+            editingStudent={editingStudent}
+          />
+
+          <StudentProfileDialog
+            student={selectedStudent}
+            open={openProfile}
+            onClose={() => setOpenProfile(false)}
+          />
         </Box>
-      </Box>
-
-      <Box sx={{ 
-        flexGrow: 1,
-        width: '100%',
-        px: 3,
-        py: 2,
-      }}>
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          initialState={{
-            pagination: {
-              paginationModel: { pageSize: 10, page: 0 },
-            },
-          }}
-          pageSizeOptions={[10, 25, 50]}
-          checkboxSelection
-          disableRowSelectionOnClick={false}
-          disableColumnMenu
-          getRowHeight={() => 75}
-          onRowClick={handleRowClick}
-          rowSelectionModel={selectionModel}
-          onRowSelectionModelChange={(newSelectionModel) => {
-            setSelectionModel(newSelectionModel);
-          }}
-          sx={{
-            border: 'none',
-            backgroundColor: '#fff',
-            cursor: 'pointer',
-            '& .MuiDataGrid-cell': {
-              borderBottom: '1px solid #f0f0f0',
-              py: 3,
-              px: 2,
-              fontSize: '1rem',
-            },
-            '& .MuiDataGrid-columnHeaders': {
-              backgroundColor: '#f8f9fa',
-              borderBottom: 'none',
-              '& .MuiDataGrid-columnHeader': {
-                py: 2,
-                px: 2,
-                '&:focus': {
-                  outline: 'none',
-                },
-                '& .MuiDataGrid-columnHeaderTitle': {
-                  fontFamily: 'Signika',
-                  fontWeight: 600,
-                  fontSize: '1.1rem',
-                  color: '#2c3e50',
-                },
-              },
-            },
-            '& .MuiDataGrid-row': {
-              '&:hover': {
-                backgroundColor: '#f8f9fa',
-              },
-              '&.Mui-selected': {
-                backgroundColor: '#0083cb15',
-                '&:hover': {
-                  backgroundColor: '#0083cb22',
-                },
-              },
-            },
-            '& .MuiCheckbox-root': {
-              color: '#0083cb',
-              '&.Mui-checked': {
-                color: '#0083cb',
-              },
-            },
-            '& .MuiDataGrid-footer': {
-              borderTop: 'none',
-              borderBottom: '1px solid #f0f0f0',
-            },
-            '& .MuiDataGrid-virtualScroller': {
-              '& .MuiDataGrid-virtualScrollerContent': {
-                height: '100% !important',
-              },
-            },
-          }}
-        />
-      </Box>
-
-      <StudentFormDialog
-        open={openDialog}
-        onClose={handleCloseDialog}
-        formData={formData}
-        setFormData={setFormData}
-        handleSubmit={handleSubmit}
-        editingStudent={editingStudent}
-      />
-
-      <StudentProfileDialog
-        student={selectedStudent}
-        open={openProfile}
-        onClose={() => setOpenProfile(false)}
-      />
-    </Box>
+      </div>
+    </div>
   );
 };
 

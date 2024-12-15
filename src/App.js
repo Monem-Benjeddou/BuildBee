@@ -12,6 +12,7 @@ import ResetPassword from './components/ResetPassword';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
+import Programs from './components/Programs';
 
 // Placeholder components for other routes
 const StudentProfile = () => <div>Student Profile Page</div>;
@@ -95,6 +96,11 @@ function App() {
                 <Layout>
                   <AccountDetails />
                 </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/programs" element={
+              <ProtectedRoute>
+                <Programs />
               </ProtectedRoute>
             } />
             
