@@ -1,156 +1,87 @@
-import { v4 as uuidv4 } from 'uuid';
-import { getData, writeData } from '../utils/fileUtils';
+import { apiGet, apiPost, apiPut, apiDelete } from '../utils/fileUtils';
+
+const transformSession = (session) => {
+  if (!session) return null;
+  return {
+    ...session,
+    id: session._id
+  };
+};
+
+const transformSessions = (sessions) => {
+  if (!Array.isArray(sessions)) return [];
+  return sessions.map(transformSession);
+};
 
 // Get all sessions
 export const getAllSessions = async () => {
-  const data = await getData();
-  if (!data) return [];
-  
-  const sessions = data.sessions || [];
-  const groups = data.groups || [];
-
-  return sessions.map(session => ({
-    ...session,
-    groupName: groups.find(g => g.id === session.groupId)?.name || ''
-  }));
+  const sessions = await apiGet('/sessions');
+  return transformSessions(sessions);
 };
 
-// Get sessions by group
-export const getSessionsByGroup = async (groupId) => {
-  const data = await getData();
-  if (!data) return [];
-  
-  const group = data.groups.find(g => g.id === groupId);
-  if (!group || !group.sessionIds) return [];
-  
-  return (data.sessions || []).filter(session => group.sessionIds.includes(session.id));
+// Get session by ID
+export const getSessionById = async (id) => {
+  const session = await apiGet(`/sessions/${id}`);
+  return transformSession(session);
 };
 
 // Create new session
 export const createSession = async (sessionData) => {
-  const data = await getData();
-  if (!data) return null;
-
-  const group = data.groups.find(g => g.id === sessionData.groupId);
-  if (!group) return null;
-
-  const newSession = {
-    id: uuidv4(),
+  // Ensure required fields and proper format
+  const session = await apiPost('/sessions', {
     name: sessionData.name,
-    date: sessionData.date,
-    duration: sessionData.duration,
+    date: sessionData.date.toISOString().split('T')[0], // Format: YYYY-MM-DD
+    duration: parseInt(sessionData.duration),
     location: sessionData.location,
     description: sessionData.description || '',
-    status: 'upcoming',
-    groupId: sessionData.groupId,
-    attendance: []
-  };
-
-  // Initialize sessions array if it doesn't exist
-  if (!data.sessions) {
-    data.sessions = [];
-  }
-
-  // Add session to sessions array
-  data.sessions.push(newSession);
-
-  // Initialize sessionIds array if it doesn't exist
-  if (!group.sessionIds) {
-    group.sessionIds = [];
-  }
-
-  // Add session ID to group
-  group.sessionIds.push(newSession.id);
-
-  // Write updated data back to file
-  await writeData(data);
-
-  return { ...newSession, groupName: group.name };
+    status: 'upcoming', // Default status for new sessions
+    groupId: sessionData.groupId
+  });
+  return transformSession(session);
 };
 
 // Update session
-export const updateSession = async (groupId, sessionId, sessionData) => {
-  const data = await getData();
-  if (!data) return null;
-
-  const sessionIndex = data.sessions.findIndex(s => s.id === sessionId);
-  if (sessionIndex === -1) return null;
-
-  const updatedSession = {
-    ...data.sessions[sessionIndex],
-    name: sessionData.name,
-    date: sessionData.date,
-    duration: sessionData.duration,
-    location: sessionData.location,
-    description: sessionData.description || data.sessions[sessionIndex].description
+export const updateSession = async (id, sessionData) => {
+  // Only send fields that are being updated
+  const updateData = {
+    ...(sessionData.name && { name: sessionData.name }),
+    ...(sessionData.date && { date: sessionData.date.toISOString().split('T')[0] }),
+    ...(sessionData.duration && { duration: parseInt(sessionData.duration) }),
+    ...(sessionData.location && { location: sessionData.location }),
+    ...(sessionData.description && { description: sessionData.description }),
+    ...(sessionData.status && { status: sessionData.status }),
+    ...(sessionData.groupId && { groupId: sessionData.groupId })
   };
-
-  data.sessions[sessionIndex] = updatedSession;
   
-  // Write updated data back to file
-  await writeData(data);
-
-  const group = data.groups.find(g => g.id === groupId);
-  return { ...updatedSession, groupName: group?.name || '' };
+  const session = await apiPut(`/sessions/${id}`, updateData);
+  return transformSession(session);
 };
 
 // Delete session
-export const deleteSession = async (groupId, sessionId) => {
-  const data = await getData();
-  if (!data) return false;
-
-  const sessionIndex = data.sessions.findIndex(s => s.id === sessionId);
-  if (sessionIndex === -1) return false;
-
-  // Remove session from sessions array
-  data.sessions.splice(sessionIndex, 1);
-
-  // Remove session ID from group
-  const group = data.groups.find(g => g.id === groupId);
-  if (group && group.sessionIds) {
-    group.sessionIds = group.sessionIds.filter(id => id !== sessionId);
-  }
-
-  // Write updated data back to file
-  await writeData(data);
-  return true;
+export const deleteSession = async (id) => {
+  return apiDelete(`/sessions/${id}`);
 };
 
-// Mark session as completed
-export const markSessionCompleted = async (groupId, sessionId) => {
-  const data = await getData();
-  if (!data) return false;
-
-  const session = data.sessions.find(s => s.id === sessionId);
-  if (!session) return false;
-
-  session.status = 'completed';
-  
-  // Write updated data back to file
-  await writeData(data);
-  return true;
+// Get session attendance
+export const getSessionAttendance = async (id) => {
+  return apiGet(`/sessions/${id}/attendance`);
 };
 
 // Mark attendance
-export const markAttendance = async (groupId, sessionId, studentId, present) => {
-  const data = await getData();
-  if (!data) return false;
+export const markAttendance = async (id, studentIds) => {
+  return apiPost(`/sessions/${id}/attendance`, {
+    attendance: studentIds
+  });
+};
 
-  const session = data.sessions.find(s => s.id === sessionId);
-  if (!session) return false;
+// Get upcoming sessions
+export const getUpcomingSessions = async () => {
+  const sessions = await apiGet('/sessions/upcoming');
+  return transformSessions(sessions);
+};
 
-  if (!session.attendance) {
-    session.attendance = [];
-  }
-
-  const attendanceIndex = session.attendance.findIndex(a => a.studentId === studentId);
-  if (attendanceIndex === -1) {
-    session.attendance.push({ studentId, present });
-  } else {
-    session.attendance[attendanceIndex].present = present;
-  }
-
-  // Write updated data back to file
-  await writeData(data);
-  return true;
+// Get completed sessions
+export const getCompletedSessions = async () => {
+  const sessions = await apiGet('/sessions/completed');
+  return transformSessions(sessions);
 };
