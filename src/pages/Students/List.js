@@ -7,6 +7,7 @@ import {
   Avatar,
   Tooltip,
   Checkbox,
+  TextField,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -17,6 +18,7 @@ import {
 import { DataGrid } from '@mui/x-data-grid';
 import StudentDialog from '../../components/StudentDialog';
 import StudentProfileDialog from '../../components/StudentProfileDialog';
+
 import { getGroupColor } from '../../utils/colors';
 import { 
   getAllStudents, 
@@ -189,6 +191,7 @@ const StudentList = () => {
       headerAlign: 'center',
       align: 'center',
       renderCell: (params) => (
+
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
           <Typography>
             {params.value}
@@ -249,6 +252,7 @@ const StudentList = () => {
   ];
 
   return (
+
     <Box sx={{ 
       height: '100%', 
       width: '100%', 

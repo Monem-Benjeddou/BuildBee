@@ -1,0 +1,38 @@
+{
+  "categories": [
+    "All",
+    "Development",
+    "Design",
+    "Marketing",
+    "Business"
+  ],
+  "programs": [
+    {
+      "id": 1,
+      "name": "Web Development Bootcamp",
+      "category": "Development",
+      "image": "/images/programs/web-dev.jpg",
+      "students": 120,
+      "groups": 8,
+      "description": "Learn full-stack web development from scratch"
+    },
+    {
+      "id": 2,
+      "name": "UI/UX Design Fundamentals",
+      "category": "Design",
+      "image": "/images/programs/ui-ux.jpg",
+      "students": 85,
+      "groups": 5,
+      "description": "Master the principles of user interface design"
+    },
+    {
+      "id": 3,
+      "name": "Digital Marketing Strategy",
+      "category": "Marketing",
+      "image": "/images/programs/marketing.jpg",
+      "students": 95,
+      "groups": 6,
+      "description": "Learn modern digital marketing techniques"
+    }
+  ]
+}

@@ -1,148 +1,90 @@
 import React from 'react';
-import {
-  Drawer,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Box,
-  Typography,
-} from '@mui/material';
-import {
-  Dashboard as DashboardIcon,
-  Group as GroupIcon,
-  School as SchoolIcon,
-  CalendarMonth as CalendarIcon,
-  Payments as PaymentsIcon,
-  EmojiEvents as StickersIcon,
-  People as PeopleIcon,
-  Event as EventIcon,
-  AssignmentTurnedIn as PresenceIcon,
-} from '@mui/icons-material';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { colors } from '../styles/theme';
 
-const menuItems = [
-  {
-    text: 'Dashboard',
-    icon: <DashboardIcon />,
-    path: '/dashboard'
-  },
-  {
-    text: 'Élèves',
-    icon: <SchoolIcon />,
-    path: '/students'
-  },
-  {
-    text: 'Students',
-    icon: <PeopleIcon />,
-    path: '/students'
-  },
-  {
-    text: 'Sessions',
-    icon: <EventIcon />,
-    path: '/sessions'
-  },
-  {
-    text: 'Groupes',
-    icon: <GroupIcon />,
-    path: '/groups'
-  },
-  {
-    text: 'Présence',
-    icon: <CalendarIcon />,
-    path: '/attendance'
-  },
-  {
-    text: 'Présences',
-    icon: <PresenceIcon />,
-    path: '/presence'
-  },
-  {
-    text: 'Paiements',
-    icon: <PaymentsIcon />,
-    path: '/payments'
-  },
-  {
-    text: 'Gommettes',
-    icon: <StickersIcon />,
-    path: '/stickers'
-  }
-];
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import '../styles/sidebar.css';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import SchoolIcon from '@mui/icons-material/School';
+import GroupIcon from '@mui/icons-material/Group';
+import SettingsIcon from '@mui/icons-material/Settings';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import LogoutIcon from '@mui/icons-material/Logout';
+import EventIcon from '@mui/icons-material/Event';
+import PaymentsIcon from '@mui/icons-material/Payments';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
+import { useAuth } from '../context/AuthContext';
 
-const Sidebar = ({ drawerWidth, isOpen }) => {
+const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { currentUser, logout } = useAuth();
+
+  const menuItems = [
+    { path: '/dashboard', icon: <DashboardIcon />, text: 'Dashboard' },
+    { path: '/students', icon: <SchoolIcon />, text: 'Élèves' },
+    { path: '/sessions', icon: <EventIcon />, text: 'Sessions' },
+    { path: '/groups', icon: <GroupIcon />, text: 'Groupes' },
+    { path: '/attendance', icon: <CalendarMonthIcon />, text: 'Présence' },
+    { path: '/presence', icon: <AssignmentTurnedInIcon />, text: 'Présences' },
+    { path: '/payments', icon: <PaymentsIcon />, text: 'Paiements' },
+    { path: '/stickers', icon: <EmojiEventsIcon />, text: 'Gommettes' },
+    { path: '/programs', icon: <SchoolIcon />, text: 'Gestion des programmes' },
+    { path: '/users', icon: <GroupIcon />, text: 'Gestion des utilisateurs' },
+    { path: '/settings', icon: <SettingsIcon />, text: 'Paramètres' },
+  ];
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Failed to log out:', error);
+    }
+  };
 
   return (
-    <Drawer
-      variant="permanent"
-      sx={{
-        width: drawerWidth,
-        flexShrink: 0,
-        '& .MuiDrawer-paper': {
-          width: drawerWidth,
-          boxSizing: 'border-box',
-          backgroundColor: '#fff',
-          borderRight: '1px solid #f0f0f0',
-          transition: 'transform 0.3s ease-in-out',
-          transform: isOpen ? 'translateX(0)' : `translateX(-${drawerWidth}px)`,
-        },
-      }}
-    >
-      <Box sx={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        p: 2,
-        borderBottom: '1px solid #f0f0f0',
-      }}>
-        <Typography 
-          variant="h5" 
-          sx={{ 
-            color: colors.primary,
-            fontWeight: 600,
-            fontFamily: 'Signika',
-          }}
-        >
-          BuildBee
-        </Typography>
-      </Box>
-      <List sx={{ mt: 2 }}>
+    <div className="sidebar">
+      <div className="sidebar-logo">
+        <div className="logo-icon">
+          <div className="logo-dots">
+            <div className="logo-dot"></div>
+            <div className="logo-dot"></div>
+          </div>
+          <div className="logo-bar"></div>
+        </div>
+        <div className="logo-text">
+          <span className="logo-title">LOGO</span>
+          <span className="logo-slogan">YOUR SLOGAN HERE</span>
+        </div>
+      </div>
+
+      <nav className="sidebar-menu">
         {menuItems.map((item) => (
-          <ListItem key={item.text} disablePadding>
-            <ListItemButton
-              onClick={() => navigate(item.path)}
-              sx={{
-                mx: 1,
-                borderRadius: '10px',
-                mb: 0.5,
-                backgroundColor: location.pathname === item.path ? `${colors.primary}15` : 'transparent',
-                color: location.pathname === item.path ? colors.primary : 'grey.700',
-                '&:hover': {
-                  backgroundColor: location.pathname === item.path ? `${colors.primary}22` : 'rgba(0, 0, 0, 0.04)',
-                },
-              }}
-            >
-              <ListItemIcon sx={{ 
-                color: location.pathname === item.path ? colors.primary : 'grey.700',
-                minWidth: '40px',
-              }}>
-                {item.icon}
-              </ListItemIcon>
-              <ListItemText 
-                primary={item.text} 
-                primaryTypographyProps={{
-                  fontFamily: 'Signika',
-                  fontWeight: location.pathname === item.path ? 600 : 400,
-                }}
-              />
-            </ListItemButton>
-          </ListItem>
+          <Link
+            key={item.path}
+            to={item.path}
+            className={`menu-item ${location.pathname === item.path ? 'active' : ''}`}
+          >
+            {item.icon}
+            <span className="menu-text">{item.text}</span>
+          </Link>
         ))}
-      </List>
-    </Drawer>
+      </nav>
+
+      <div className="sidebar-footer">
+        <Link to="/profile" className="menu-item">
+          <AccountCircleIcon />
+          <span className="menu-text">
+            {currentUser?.email || 'Mon compte'}
+          </span>
+        </Link>
+        <button onClick={handleLogout} className="menu-item logout-btn">
+          <LogoutIcon />
+          <span className="menu-text">Déconnexion</span>
+        </button>
+      </div>
+    </div>
   );
 };
 
