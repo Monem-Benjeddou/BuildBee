@@ -4,167 +4,164 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button,
   TextField,
+  Button,
+  Box,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  Box,
-  Grid,
+  Typography,
 } from '@mui/material';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { TimePicker } from '@mui/x-date-pickers/TimePicker';
-import { format } from 'date-fns';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { createSession, updateSession } from '../services/sessionService';
+import { getAllGroups } from '../services/groupService';
 
-const SessionDialog = ({ open, onClose, session, onSubmit, groups }) => {
+const SessionDialog = ({ open, onClose, onSave, session }) => {
   const [formData, setFormData] = useState({
     name: '',
     date: new Date(),
-    startTime: '09:00',
-    endTime: '10:00',
+    duration: 60,
     location: '',
+    description: '',
     groupId: '',
-    status: 'upcoming'
   });
+  const [groups, setGroups] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const loadGroups = async () => {
+      try {
+        const groupsData = await getAllGroups();
+        setGroups(groupsData);
+      } catch (error) {
+        console.error('Error loading groups:', error);
+      }
+    };
+
+    loadGroups();
+  }, []);
 
   useEffect(() => {
     if (session) {
       setFormData({
-        ...session,
-        date: new Date(session.date),
-        startTime: session.startTime || '09:00',
-        endTime: session.endTime || '10:00',
-      });
-    } else {
-      setFormData({
-        name: '',
-        date: new Date(),
-        startTime: '09:00',
-        endTime: '10:00',
-        location: '',
-        groupId: groups[0]?.id || '',
-        status: 'upcoming'
+        name: session.name || '',
+        date: new Date(session.date) || new Date(),
+        duration: session.duration || 60,
+        location: session.location || '',
+        description: session.description || '',
+        groupId: session.groupId || '',
       });
     }
-  }, [session, groups]);
+  }, [session]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  const handleChange = (field) => (event) => {
+    setFormData({
+      ...formData,
+      [field]: event.target.value,
+    });
   };
 
-  const handleSubmit = () => {
-    const sessionData = {
+  const handleDateChange = (newDate) => {
+    setFormData({
       ...formData,
-      date: format(new Date(formData.date), 'yyyy-MM-dd')
-    };
-    onSubmit(sessionData);
+      date: newDate,
+    });
+  };
+
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+      if (session) {
+        await updateSession(session.id, formData);
+      } else {
+        await createSession(formData);
+      }
+      onSave();
+    } catch (error) {
+      console.error('Error saving session:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
-        {session ? 'Edit Session' : 'New Session'}
+        <Typography variant="h6" sx={{ fontFamily: 'Signika' }}>
+          {session ? 'Modifier la séance' : 'Nouvelle séance'}
+        </Typography>
       </DialogTitle>
       <DialogContent>
-        <LocalizationProvider dateAdapter={AdapterDateFns}>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12}>
-              <TextField
-                name="name"
-                label="Session Name"
-                fullWidth
-                value={formData.name}
-                onChange={handleChange}
-                required
-              />
-            </Grid>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+          <TextField
+            label="Nom de la séance"
+            value={formData.name}
+            onChange={handleChange('name')}
+            fullWidth
+          />
+          
+          <FormControl fullWidth>
+            <InputLabel>Groupe</InputLabel>
+            <Select
+              value={formData.groupId}
+              onChange={handleChange('groupId')}
+              label="Groupe"
+            >
+              {groups.map((group) => (
+                <MenuItem key={group.id} value={group.id}>
+                  {group.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
-            <Grid item xs={12}>
-              <FormControl fullWidth required>
-                <InputLabel>Group</InputLabel>
-                <Select
-                  name="groupId"
-                  value={formData.groupId}
-                  label="Group"
-                  onChange={handleChange}
-                >
-                  {groups.map(group => (
-                    <MenuItem key={group.id} value={group.id}>
-                      {group.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <DateTimePicker
+              label="Date et heure"
+              value={formData.date}
+              onChange={handleDateChange}
+              renderInput={(params) => <TextField {...params} fullWidth />}
+            />
+          </LocalizationProvider>
 
-            <Grid item xs={12}>
-              <DatePicker
-                label="Date"
-                value={formData.date}
-                onChange={(newValue) => {
-                  setFormData(prev => ({
-                    ...prev,
-                    date: newValue
-                  }));
-                }}
-                renderInput={(params) => <TextField {...params} fullWidth required />}
-              />
-            </Grid>
+          <TextField
+            label="Durée (minutes)"
+            type="number"
+            value={formData.duration}
+            onChange={handleChange('duration')}
+            fullWidth
+          />
 
-            <Grid item xs={12} sm={6}>
-              <TimePicker
-                label="Start Time"
-                value={new Date(`2000-01-01T${formData.startTime}`)}
-                onChange={(newValue) => {
-                  const timeStr = format(newValue, 'HH:mm');
-                  setFormData(prev => ({
-                    ...prev,
-                    startTime: timeStr
-                  }));
-                }}
-                renderInput={(params) => <TextField {...params} fullWidth required />}
-              />
-            </Grid>
+          <TextField
+            label="Lieu"
+            value={formData.location}
+            onChange={handleChange('location')}
+            fullWidth
+          />
 
-            <Grid item xs={12} sm={6}>
-              <TimePicker
-                label="End Time"
-                value={new Date(`2000-01-01T${formData.endTime}`)}
-                onChange={(newValue) => {
-                  const timeStr = format(newValue, 'HH:mm');
-                  setFormData(prev => ({
-                    ...prev,
-                    endTime: timeStr
-                  }));
-                }}
-                renderInput={(params) => <TextField {...params} fullWidth required />}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                name="location"
-                label="Location"
-                fullWidth
-                value={formData.location}
-                onChange={handleChange}
-                required
-              />
-            </Grid>
-          </Grid>
-        </LocalizationProvider>
+          <TextField
+            label="Description"
+            value={formData.description}
+            onChange={handleChange('description')}
+            multiline
+            rows={4}
+            fullWidth
+          />
+        </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button onClick={handleSubmit} variant="contained" color="primary">
-          {session ? 'Update' : 'Create'}
+        <Button onClick={onClose} disabled={loading}>
+          Annuler
+        </Button>
+        <Button 
+          onClick={handleSubmit} 
+          variant="contained" 
+          disabled={loading || !formData.name || !formData.groupId}
+        >
+          {loading ? 'Enregistrement...' : 'Enregistrer'}
         </Button>
       </DialogActions>
     </Dialog>

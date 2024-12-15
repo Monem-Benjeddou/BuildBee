@@ -14,7 +14,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import EventIcon from '@mui/icons-material/Event';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
-import { getAllSessions, deleteSession, markSessionCompleted, createSession, updateSession } from '../../services/sessionService';
+import { getAllSessions, deleteSession, createSession, updateSession } from '../../services/sessionService';
 import SessionDialog from './SessionDialog';
 import { format } from 'date-fns';
 
@@ -53,10 +53,10 @@ const SessionsList = () => {
     setOpenDialog(true);
   };
 
-  const handleDelete = async (groupId, sessionId) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this session?')) {
       try {
-        await deleteSession(groupId, sessionId);
+        await deleteSession(id);
         await loadSessions();
       } catch (error) {
         console.error('Error deleting session:', error);
@@ -64,9 +64,9 @@ const SessionsList = () => {
     }
   };
 
-  const handleMarkCompleted = async (groupId, sessionId) => {
+  const handleMarkCompleted = async (id) => {
     try {
-      await markSessionCompleted(groupId, sessionId);
+      await updateSession(id, { status: 'completed' });
       await loadSessions();
     } catch (error) {
       console.error('Error marking session as completed:', error);
@@ -77,7 +77,7 @@ const SessionsList = () => {
     if (formData) {
       try {
         if (selectedSession) {
-          await updateSession(formData.groupId, selectedSession.id, formData);
+          await updateSession(selectedSession.id, formData);
         } else {
           await createSession(formData);
         }
@@ -103,19 +103,9 @@ const SessionsList = () => {
       ),
     },
     {
-      field: 'groupName',
-      headerName: 'Group',
-      flex: 1,
-    },
-    {
       field: 'formattedDate',
       headerName: 'Date',
       flex: 1,
-    },
-    {
-      field: 'duration',
-      headerName: 'Duration (min)',
-      width: 130,
     },
     {
       field: 'location',
@@ -131,56 +121,48 @@ const SessionsList = () => {
     {
       field: 'status',
       headerName: 'Status',
-      width: 130,
+      flex: 1,
       renderCell: (params) => (
-        <Chip
-          label={params.value}
+        <Chip 
+          label={params.value.charAt(0).toUpperCase() + params.value.slice(1)}
           color={params.value === 'completed' ? 'success' : 'primary'}
-          size="small"
+          variant="outlined"
         />
       ),
     },
     {
       field: 'actions',
       headerName: 'Actions',
-      width: 150,
+      flex: 1,
       sortable: false,
       renderCell: (params) => (
         <Box>
           <Tooltip title="Edit">
-            <IconButton onClick={() => handleEdit(params.row)} size="small">
+            <IconButton onClick={() => handleEdit(params.row)}>
               <EditIcon />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Delete">
-            <IconButton 
-              onClick={() => handleDelete(params.row.groupId, params.row.id)}
-              size="small"
-              color="error"
-            >
-              <DeleteIcon />
-            </IconButton>
-          </Tooltip>
-          {params.row.status !== 'completed' && (
+          {params.row.status === 'upcoming' && (
             <Tooltip title="Mark as Completed">
-              <IconButton
-                onClick={() => handleMarkCompleted(params.row.groupId, params.row.id)}
-                size="small"
-                color="success"
-              >
+              <IconButton onClick={() => handleMarkCompleted(params.row.id)}>
                 <CheckCircleIcon />
               </IconButton>
             </Tooltip>
           )}
+          <Tooltip title="Delete">
+            <IconButton onClick={() => handleDelete(params.row.id)}>
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
         </Box>
       ),
     },
   ];
 
   return (
-    <Box sx={{ height: 'calc(100vh - 100px)', width: '100%', p: 2 }}>
+    <Box sx={{ height: 600, width: '100%' }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-        <Typography variant="h5" component="h1">
+        <Typography variant="h5" sx={{ fontFamily: 'Signika' }}>
           Sessions
         </Typography>
         <Button
@@ -188,7 +170,7 @@ const SessionsList = () => {
           startIcon={<AddIcon />}
           onClick={handleAdd}
         >
-          Add Session
+          New Session
         </Button>
       </Box>
       <DataGrid
@@ -196,17 +178,14 @@ const SessionsList = () => {
         columns={columns}
         pageSize={10}
         rowsPerPageOptions={[10]}
-        disableSelectionOnClick
         loading={loading}
-        autoHeight
+        disableSelectionOnClick
       />
-      {openDialog && (
-        <SessionDialog
-          open={openDialog}
-          onClose={handleDialogClose}
-          session={selectedSession}
-        />
-      )}
+      <SessionDialog
+        open={openDialog}
+        onClose={handleDialogClose}
+        session={selectedSession}
+      />
     </Box>
   );
 };
