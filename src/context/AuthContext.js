@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 
-const AuthContext = createContext(null);
+const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -20,21 +20,6 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('users', JSON.stringify(users));
   }, [users]);
 
-  const register = (userData) => {
-    const existingUser = users.find(u => u.email === userData.email);
-    if (existingUser) {
-      throw new Error('User already exists');
-    }
-
-    const newUser = {
-      id: users.length + 1,
-      ...userData
-    };
-
-    setUsers([...users, newUser]);
-    return true;
-  };
-
   const login = (email, password) => {
     const user = users.find(u => u.email === email && u.password === password);
     if (user) {
@@ -45,6 +30,23 @@ export const AuthProvider = ({ children }) => {
     return false;
   };
 
+  const register = (userData) => {
+    const existingUser = users.find(u => u.email === userData.email);
+    if (existingUser) {
+      return false;
+    }
+    
+    const newUser = {
+      ...userData,
+      id: Date.now().toString(),
+    };
+    
+    setUsers([...users, newUser]);
+    setUser(newUser);
+    localStorage.setItem('currentUser', JSON.stringify(newUser));
+    return true;
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem('currentUser');
@@ -53,13 +55,16 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     users,
-    setUsers,
-    register,
     login,
+    register,
     logout,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {

@@ -1,15 +1,18 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import theme from './styles/theme';
 import Layout from './components/Layout';
 import StudentList from './pages/Students/List';
+import SessionList from './pages/Sessions/List';
 import Login from './components/Login';
 import Register from './components/Register';
 import AccountDetails from './pages/Account/AccountDetails';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
+import GroupList from './pages/Groups/List';
+import { saveCurrentRoute } from './utils/routeUtils';
 
 // Placeholder components for other routes
 const StudentProfile = () => <div>Student Profile Page</div>;
@@ -17,11 +20,23 @@ const AttendanceTracker = () => <div>Attendance Tracker Page</div>;
 const PaymentHistory = () => <div>Payment History Page</div>;
 const ModelStickers = () => <div>Model Stickers Page</div>;
 
+// RouteTracker component to save current route
+const RouteTracker = () => {
+  const location = useLocation();
+
+  React.useEffect(() => {
+    saveCurrentRoute(location);
+  }, [location]);
+
+  return null;
+};
+
 function App() {
   return (
     <ThemeProvider theme={theme}>
       <AuthProvider>
         <Router>
+          <RouteTracker />
           <Routes>
             {/* Public routes */}
             <Route path="/login" element={
@@ -36,7 +51,7 @@ function App() {
             } />
             
             {/* Protected routes */}
-            <Route path="/dashboard" element={
+            <Route path="/" element={
               <ProtectedRoute>
                 <Layout>
                   <StudentList />
@@ -47,6 +62,13 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <StudentList />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/sessions" element={
+              <ProtectedRoute>
+                <Layout>
+                  <SessionList />
                 </Layout>
               </ProtectedRoute>
             } />
@@ -78,6 +100,13 @@ function App() {
                 </Layout>
               </ProtectedRoute>
             } />
+            <Route path="/groups" element={
+              <ProtectedRoute>
+                <Layout>
+                  <GroupList />
+                </Layout>
+              </ProtectedRoute>
+            } />
             <Route path="/account" element={
               <ProtectedRoute>
                 <Layout>
@@ -86,9 +115,8 @@ function App() {
               </ProtectedRoute>
             } />
             
-            {/* Redirect root and unknown routes */}
-            <Route path="/" element={<Navigate to="/dashboard" />} />
-            <Route path="*" element={<Navigate to="/dashboard" />} />
+            {/* Catch all route - redirect to home */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Router>
       </AuthProvider>

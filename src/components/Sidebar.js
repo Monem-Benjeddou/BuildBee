@@ -3,32 +3,71 @@ import {
   Drawer,
   List,
   ListItem,
+  ListItemButton,
   ListItemIcon,
   ListItemText,
-  Typography,
   Box,
+  Typography,
 } from '@mui/material';
 import {
-  People,
-  Person,
-  DateRange,
-  AttachMoney,
-  Star,
+  Dashboard as DashboardIcon,
+  Group as GroupIcon,
+  School as SchoolIcon,
+  CalendarMonth as CalendarIcon,
+  Payments as PaymentsIcon,
+  EmojiEvents as StickersIcon,
+  People as PeopleIcon,
+  Event as EventIcon,
 } from '@mui/icons-material';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { colors } from '../styles/theme';
 
 const menuItems = [
-  { text: 'Student List', icon: People, path: '/students' },
-  { text: 'Student Profile', icon: Person, path: '/profile' },
-  { text: 'Attendance Tracker', icon: DateRange, path: '/attendance' },
-  { text: 'Payment History', icon: AttachMoney, path: '/payments' },
-  { text: 'Model Stickers', icon: Star, path: '/stickers' },
+  {
+    text: 'Dashboard',
+    icon: <DashboardIcon />,
+    path: '/dashboard'
+  },
+  {
+    text: 'Élèves',
+    icon: <SchoolIcon />,
+    path: '/students'
+  },
+  {
+    text: 'Students',
+    icon: <PeopleIcon />,
+    path: '/students'
+  },
+  {
+    text: 'Sessions',
+    icon: <EventIcon />,
+    path: '/sessions'
+  },
+  {
+    text: 'Groupes',
+    icon: <GroupIcon />,
+    path: '/groups'
+  },
+  {
+    text: 'Présence',
+    icon: <CalendarIcon />,
+    path: '/attendance'
+  },
+  {
+    text: 'Paiements',
+    icon: <PaymentsIcon />,
+    path: '/payments'
+  },
+  {
+    text: 'Gommettes',
+    icon: <StickersIcon />,
+    path: '/stickers'
+  }
 ];
 
-const Sidebar = ({ drawerWidth, isOpen, onDrawerToggle }) => {
-  const navigate = useNavigate();
+const Sidebar = ({ drawerWidth, isOpen }) => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   return (
     <Drawer
@@ -39,54 +78,61 @@ const Sidebar = ({ drawerWidth, isOpen, onDrawerToggle }) => {
         '& .MuiDrawer-paper': {
           width: drawerWidth,
           boxSizing: 'border-box',
-          backgroundColor: '#f5f5f5',
+          backgroundColor: '#fff',
+          borderRight: '1px solid #f0f0f0',
+          transition: 'transform 0.3s ease-in-out',
+          transform: isOpen ? 'translateX(0)' : `translateX(-${drawerWidth}px)`,
         },
       }}
-      open={isOpen}
     >
-      <Box sx={{ p: 2, mt: 8 }}>
-        <Typography
-          variant="h6"
-          sx={{
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        p: 2,
+        borderBottom: '1px solid #f0f0f0',
+      }}>
+        <Typography 
+          variant="h5" 
+          sx={{ 
             color: colors.primary,
-            fontWeight: 'bold',
-            textAlign: 'center',
-            mb: 2,
+            fontWeight: 600,
+            fontFamily: 'Signika',
           }}
         >
-          Student Manager
+          BuildBee
         </Typography>
       </Box>
-      <List>
+      <List sx={{ mt: 2 }}>
         {menuItems.map((item) => (
-          <ListItem
-            button
-            key={item.text}
-            onClick={() => navigate(item.path)}
-            sx={{
-              backgroundColor:
-                location.pathname === item.path ? 'rgba(0, 131, 203, 0.08)' : 'transparent',
-              '&:hover': {
-                backgroundColor: 'rgba(0, 131, 203, 0.15)',
-              },
-            }}
-          >
-            <ListItemIcon
+          <ListItem key={item.text} disablePadding>
+            <ListItemButton
+              onClick={() => navigate(item.path)}
               sx={{
+                mx: 1,
+                borderRadius: '10px',
+                mb: 0.5,
+                backgroundColor: location.pathname === item.path ? `${colors.primary}15` : 'transparent',
                 color: location.pathname === item.path ? colors.primary : 'grey.700',
-              }}
-            >
-              <item.icon />
-            </ListItemIcon>
-            <ListItemText
-              primary={item.text}
-              sx={{
-                '& .MuiTypography-root': {
-                  color: location.pathname === item.path ? colors.primary : 'grey.700',
-                  fontWeight: location.pathname === item.path ? 600 : 400,
+                '&:hover': {
+                  backgroundColor: location.pathname === item.path ? `${colors.primary}22` : 'rgba(0, 0, 0, 0.04)',
                 },
               }}
-            />
+            >
+              <ListItemIcon sx={{ 
+                color: location.pathname === item.path ? colors.primary : 'grey.700',
+                minWidth: '40px',
+              }}>
+                {item.icon}
+              </ListItemIcon>
+              <ListItemText 
+                primary={item.text} 
+                primaryTypographyProps={{
+                  fontFamily: 'Signika',
+                  fontWeight: location.pathname === item.path ? 600 : 400,
+                }}
+              />
+            </ListItemButton>
           </ListItem>
         ))}
       </List>
