@@ -25,6 +25,7 @@ import {
   deleteStudent,
 } from '../../services/studentService';
 import { getAllGroups } from '../../services/groupService';
+import '../../styles/table.css';
 
 const getInitials = (firstName = '', lastName = '') => {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
@@ -120,14 +121,8 @@ const StudentList = () => {
       sortable: false,
       renderCell: (params) => (
         <Avatar
+          className="table-avatar"
           onClick={() => handleViewProfile(params.row)}
-          sx={{
-            bgcolor: '#0083cb',
-            cursor: 'pointer',
-            '&:hover': {
-              opacity: 0.8,
-            },
-          }}
         >
           {getInitials(params.row.firstName, params.row.lastName)}
         </Avatar>
@@ -138,12 +133,9 @@ const StudentList = () => {
       headerName: 'Prénom',
       flex: 1,
       renderHeader: (params) => (
-        <Typography sx={{ fontWeight: 600, fontFamily: 'Signika' }}>
+        <Typography className="table-header-cell">
           {params.colDef.headerName}
         </Typography>
-      ),
-      renderCell: (params) => (
-        <Typography sx={{ fontFamily: 'Signika' }}>{params.value}</Typography>
       ),
     },
     {
@@ -151,12 +143,9 @@ const StudentList = () => {
       headerName: 'Nom',
       flex: 1,
       renderHeader: (params) => (
-        <Typography sx={{ fontWeight: 600, fontFamily: 'Signika' }}>
+        <Typography className="table-header-cell">
           {params.colDef.headerName}
         </Typography>
-      ),
-      renderCell: (params) => (
-        <Typography sx={{ fontFamily: 'Signika' }}>{params.value}</Typography>
       ),
     },
     {
@@ -164,12 +153,12 @@ const StudentList = () => {
       headerName: 'Date de naissance',
       flex: 1,
       renderHeader: (params) => (
-        <Typography sx={{ fontWeight: 600, fontFamily: 'Signika' }}>
+        <Typography className="table-header-cell">
           {params.colDef.headerName}
         </Typography>
       ),
       renderCell: (params) => (
-        <Typography sx={{ fontFamily: 'Signika' }}>
+        <Typography>
           {new Date(params.value).toLocaleDateString('fr-FR')}
         </Typography>
       ),
@@ -179,7 +168,7 @@ const StudentList = () => {
       headerName: 'Groupe',
       flex: 1,
       renderHeader: (params) => (
-        <Typography sx={{ fontWeight: 600, fontFamily: 'Signika' }}>
+        <Typography className="table-header-cell">
           {params.colDef.headerName}
         </Typography>
       ),
@@ -188,13 +177,10 @@ const StudentList = () => {
         return group ? (
           <Chip
             label={group.name}
+            className="table-chip"
             sx={{
               backgroundColor: '#0083cb20',
               color: '#0083cb',
-              fontFamily: 'Signika',
-              '& .MuiChip-label': {
-                fontWeight: 500,
-              },
             }}
           />
         ) : null;
@@ -202,20 +188,16 @@ const StudentList = () => {
     },
     {
       field: 'actions',
-      headerName: 'Actions',
+      headerName: '',
       width: 120,
       sortable: false,
-      renderHeader: (params) => (
-        <Typography sx={{ fontWeight: 600, fontFamily: 'Signika' }}>
-          {params.colDef.headerName}
-        </Typography>
-      ),
       renderCell: (params) => (
-        <Box>
+        <div className="table-actions">
           <Tooltip title="Modifier">
             <IconButton
               onClick={() => handleEdit(params.row)}
-              sx={{ color: '#0083cb' }}
+              size="small"
+              sx={{ color: '#64748B' }}
             >
               <EditIcon />
             </IconButton>
@@ -223,86 +205,61 @@ const StudentList = () => {
           <Tooltip title="Supprimer">
             <IconButton
               onClick={() => handleDelete(params.row.id)}
-              sx={{ color: '#ed174c' }}
+              size="small"
+              sx={{ color: '#64748B' }}
             >
               <DeleteIcon />
             </IconButton>
           </Tooltip>
-        </Box>
+        </div>
       ),
     },
   ];
 
   return (
-    <Box sx={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Box sx={{ p: 3 }}>
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          mb: 3,
-          gap: 2 
-        }}>
-          <Typography variant="h4" sx={{ fontFamily: 'Signika', fontWeight: 600 }}>
-            Élèves
+    <Box sx={{ height: '100%', width: '100%', p: 3 }}>
+      <div className="table-header">
+        <div>
+          <Typography variant="h4" className="table-title">
+            Gestion des élèves
           </Typography>
+          <Typography variant="body1" className="table-subtitle">
+            Liste complète des élèves inscrits
+          </Typography>
+        </div>
+        <AddButton onClick={handleAdd}>
+          Nouvel élève
+        </AddButton>
+      </div>
 
-          <AddButton onClick={handleAdd}>
-            Nouvel Élève
-          </AddButton>
-        </Box>
+      <DataGrid
+        rows={rows}
+        columns={columns}
+        pageSize={10}
+        rowsPerPageOptions={[10]}
+        checkboxSelection
+        disableSelectionOnClick
+        loading={loading}
+        autoHeight
+        sx={{
+          '& .MuiDataGrid-cell:focus': {
+            outline: 'none',
+          },
+        }}
+      />
 
-        <Box sx={{ flex: 1, minHeight: 0 }}>
-          <DataGrid
-            rows={rows}
-            columns={columns}
-            loading={loading}
-            checkboxSelection
-            disableRowSelectionOnClick
-            selectionModel={selectionModel}
-            onSelectionModelChange={(newSelectionModel) => {
-              setSelectionModel(newSelectionModel);
-            }}
-            sx={{
-              height: '100%',
-              border: 'none',
-              backgroundColor: 'white',
-              borderRadius: '12px',
-              boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.05)',
-              '& .MuiDataGrid-cell': {
-                borderBottom: '1px solid #f0f0f0',
-                fontFamily: 'Signika',
-              },
-              '& .MuiDataGrid-columnHeaders': {
-                backgroundColor: '#f9fafb',
-                borderBottom: 'none',
-              },
-              '& .MuiDataGrid-columnHeaderTitle': {
-                fontWeight: 600,
-              },
-              '& .MuiCheckbox-root': {
-                color: '#0083cb',
-              },
-              '& .MuiCheckbox-root.Mui-checked': {
-                color: '#0083cb',
-              },
-            }}
-          />
-        </Box>
+      <StudentDialog
+        open={openDialog}
+        onClose={handleDialogClose}
+        student={editingStudent}
+        groups={groups}
+      />
 
-        <StudentDialog
-          open={openDialog}
-          onClose={handleDialogClose}
-          student={editingStudent}
-          groups={groups}
-        />
-
-        <StudentProfileDialog
-          open={openProfile}
-          onClose={handleProfileClose}
-          student={selectedStudent}
-        />
-      </Box>
+      <StudentProfileDialog
+        open={openProfile}
+        onClose={handleProfileClose}
+        student={selectedStudent}
+      />
     </Box>
   );
 };
