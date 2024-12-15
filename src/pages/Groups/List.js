@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Button,
   IconButton,
   Typography,
   Tooltip,
   Chip,
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
-import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import GroupIcon from '@mui/icons-material/Group';
 import EventIcon from '@mui/icons-material/Event';
+import AddButton from '../../components/AddButton';
 import { getAllGroups, deleteGroup, createGroup, updateGroup } from '../../services/groupService';
 import { getSessionById } from '../../services/sessionService';
 import GroupDialog from '../../components/GroupDialog';
@@ -187,15 +186,13 @@ const GroupList = () => {
 
   return (
     <Box sx={{ height: '100%', width: '100%', p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4" sx={{ fontFamily: 'Signika' }}>Gestion des Groupes</Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleAdd}
-        >
-          Ajouter un Groupe
-        </Button>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4" sx={{ fontFamily: 'Signika', fontWeight: 600 }}>
+          Groupes
+        </Typography>
+        <AddButton onClick={handleAdd}>
+          Nouveau Groupe
+        </AddButton>
       </Box>
 
       <DataGrid

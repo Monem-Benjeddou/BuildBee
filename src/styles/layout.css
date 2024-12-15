@@ -1,22 +1,38 @@
 .main-layout {
   display: flex;
+  flex-direction: column;
   min-height: 100vh;
+  padding-top: 56px; /* Height of navbar */
+}
+
+.main-layout > div {
+  flex: 1;
+  display: flex;
 }
 
 .main-content {
   flex: 1;
   background: #F9FAFB;
-  min-height: 100vh;
-  width: calc(100% - 280px);
+  padding: 24px;
   box-sizing: border-box;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Make DataGrid container take remaining height */
+.main-content > div {
+  flex: 1;
+  min-height: 0; /* Important for DataGrid to not expand infinitely */
+  display: flex;
+  flex-direction: column;
 }
 
 .search-container {
-  margin-left: 280px;
   position: fixed;
-  top: 0;
+  top: 56px; /* Updated to account for navbar */
   right: 0;
-  width: calc(100% - 280px);
+  width: 100%;
   z-index: 100;
   background: white;
   padding: 16px 24px;

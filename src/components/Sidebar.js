@@ -13,6 +13,7 @@ import PaymentsIcon from '@mui/icons-material/Payments';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
 import { useAuth } from '../context/AuthContext';
 
 const Sidebar = () => {
@@ -25,11 +26,10 @@ const Sidebar = () => {
     { path: '/students', icon: <SchoolIcon />, text: 'Élèves' },
     { path: '/sessions', icon: <EventIcon />, text: 'Sessions' },
     { path: '/groups', icon: <GroupIcon />, text: 'Groupes' },
-    { path: '/attendance', icon: <CalendarMonthIcon />, text: 'Présence' },
     { path: '/presence', icon: <AssignmentTurnedInIcon />, text: 'Présences' },
     { path: '/payments', icon: <PaymentsIcon />, text: 'Paiements' },
     { path: '/stickers', icon: <EmojiEventsIcon />, text: 'Gommettes' },
-    { path: '/programs', icon: <SchoolIcon />, text: 'Gestion des programmes' },
+    { path: '/programs', icon: <MenuBookIcon />, text: 'Gestion des programmes' },
     { path: '/users', icon: <GroupIcon />, text: 'Gestion des utilisateurs' },
     { path: '/settings', icon: <SettingsIcon />, text: 'Paramètres' },
   ];
@@ -52,10 +52,6 @@ const Sidebar = () => {
             <div className="logo-dot"></div>
           </div>
           <div className="logo-bar"></div>
-        </div>
-        <div className="logo-text">
-          <span className="logo-title">LOGO</span>
-          <span className="logo-slogan">YOUR SLOGAN HERE</span>
         </div>
       </div>
 

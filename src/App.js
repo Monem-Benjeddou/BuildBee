@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -9,6 +9,7 @@ import Layout from './components/Layout';
 import StudentList from './pages/Students/List';
 import SessionList from './pages/Sessions/List';
 import PresenceList from './pages/Presence/List';
+import PaymentList from './pages/Payments/List';
 import Login from './components/Login';
 import Register from './components/Register';
 import AccountDetails from './pages/Account/AccountDetails';
@@ -18,25 +19,11 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
 import GroupList from './pages/Groups/List';
-import Programs from './components/Programs';
-import { saveCurrentRoute } from './utils/routeUtils';
+import ProgramList from './pages/Programs/List';
 
 // Placeholder components for other routes
 const StudentProfile = () => <div>Student Profile Page</div>;
-const AttendanceTracker = () => <div>Attendance Tracker Page</div>;
-const PaymentHistory = () => <div>Payment History Page</div>;
 const ModelStickers = () => <div>Model Stickers Page</div>;
-
-// RouteTracker component to save current route
-const RouteTracker = () => {
-  const location = useLocation();
-
-  React.useEffect(() => {
-    saveCurrentRoute(location);
-  }, [location]);
-
-  return null;
-};
 
 function App() {
   return (
@@ -44,155 +31,28 @@ function App() {
       <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={fr}>
         <AuthProvider>
           <Router>
-            <RouteTracker />
             <Routes>
               {/* Public routes */}
-              <Route
-                path="/login"
-                element={
-                  <PublicRoute>
-                    <Login />
-                  </PublicRoute>
-                }
-              />
-              <Route
-                path="/register"
-                element={
-                  <PublicRoute>
-                    <Register />
-                  </PublicRoute>
-                }
-              />
-              <Route
-                path="/forgot-password"
-                element={
-                  <PublicRoute>
-                    <ForgotPassword />
-                  </PublicRoute>
-                }
-              />
-              <Route
-                path="/reset-password"
-                element={
-                  <PublicRoute>
-                    <ResetPassword />
-                  </PublicRoute>
-                }
-              />
+              <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+              <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+              <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+              <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
 
-              {/* Protected routes with sidebar */}
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <StudentList />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/students"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <StudentList />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/sessions"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <SessionList />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <StudentProfile />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/attendance"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <AttendanceTracker />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/payments"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <PaymentHistory />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/stickers"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <ModelStickers />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/groups"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <GroupList />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/presence"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <PresenceList />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/account"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <AccountDetails />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/programs"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <Programs />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
+              {/* Protected routes */}
+              <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+                <Route path="/" element={<Navigate to="/students" replace />} />
+                <Route path="/students" element={<StudentList />} />
+                <Route path="/students/:id" element={<StudentProfile />} />
+                <Route path="/sessions" element={<SessionList />} />
+                <Route path="/presence" element={<PresenceList />} />
+                <Route path="/groups" element={<GroupList />} />
+                <Route path="/programs" element={<ProgramList />} />
+                <Route path="/payments" element={<PaymentList />} />
+                <Route path="/stickers" element={<ModelStickers />} />
+                <Route path="/account" element={<AccountDetails />} />
+              </Route>
 
-              {/* Catch all route - redirect to home */}
+              {/* Catch all route */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Router>

@@ -1,28 +1,29 @@
 import React, { useEffect, useState } from 'react';
 import {
   Box,
-  Button,
   IconButton,
   Typography,
   Tooltip,
   Chip,
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
-import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import EventIcon from '@mui/icons-material/Event';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
+import AddButton from '../../components/AddButton';
 import { getAllSessions, deleteSession, createSession, updateSession } from '../../services/sessionService';
 import SessionDialog from './SessionDialog';
 import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 const SessionsList = () => {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedSession, setSelectedSession] = useState(null);
+  const [selectionModel, setSelectionModel] = useState([]);
 
   const loadSessions = async () => {
     try {
@@ -30,7 +31,7 @@ const SessionsList = () => {
       const data = await getAllSessions();
       setSessions(data.map(session => ({
         ...session,
-        formattedDate: format(new Date(session.date), 'PPP p')
+        formattedDate: format(new Date(session.date), 'PPP p', { locale: fr })
       })));
     } catch (error) {
       console.error('Error loading sessions:', error);
@@ -54,103 +55,144 @@ const SessionsList = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this session?')) {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette session ?')) {
       try {
         await deleteSession(id);
-        await loadSessions();
+        loadSessions();
       } catch (error) {
         console.error('Error deleting session:', error);
       }
     }
   };
 
-  const handleMarkCompleted = async (id) => {
-    try {
-      await updateSession(id, { status: 'completed' });
-      await loadSessions();
-    } catch (error) {
-      console.error('Error marking session as completed:', error);
+  const handleDialogClose = (saved) => {
+    setOpenDialog(false);
+    if (saved) {
+      loadSessions();
     }
   };
 
-  const handleDialogClose = async (formData) => {
-    if (formData) {
-      try {
-        if (selectedSession) {
-          await updateSession(selectedSession.id, formData);
-        } else {
-          await createSession(formData);
-        }
-        await loadSessions();
-      } catch (error) {
-        console.error('Error saving session:', error);
-      }
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'completed':
+        return '#8dc63f';
+      case 'upcoming':
+        return '#0083cb';
+      case 'cancelled':
+        return '#ed174c';
+      default:
+        return '#fff200';
     }
-    setOpenDialog(false);
-    setSelectedSession(null);
+  };
+
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case 'completed':
+        return 'Terminée';
+      case 'upcoming':
+        return 'À venir';
+      case 'cancelled':
+        return 'Annulée';
+      default:
+        return status;
+    }
   };
 
   const columns = [
     {
       field: 'name',
-      headerName: 'Session Name',
+      headerName: 'Nom',
       flex: 1,
-      renderCell: (params) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <EventIcon color="primary" />
-          <Typography>{params.value}</Typography>
-        </Box>
+      renderHeader: (params) => (
+        <Typography sx={{ fontWeight: 600, fontFamily: 'Signika' }}>
+          {params.colDef.headerName}
+        </Typography>
       ),
     },
     {
       field: 'formattedDate',
-      headerName: 'Date',
+      headerName: 'Date et Heure',
       flex: 1,
+      renderHeader: (params) => (
+        <Typography sx={{ fontWeight: 600, fontFamily: 'Signika' }}>
+          {params.colDef.headerName}
+        </Typography>
+      ),
+    },
+    {
+      field: 'duration',
+      headerName: 'Durée (min)',
+      width: 130,
+      renderHeader: (params) => (
+        <Typography sx={{ fontWeight: 600, fontFamily: 'Signika' }}>
+          {params.colDef.headerName}
+        </Typography>
+      ),
     },
     {
       field: 'location',
-      headerName: 'Location',
+      headerName: 'Lieu',
       flex: 1,
+      renderHeader: (params) => (
+        <Typography sx={{ fontWeight: 600, fontFamily: 'Signika' }}>
+          {params.colDef.headerName}
+        </Typography>
+      ),
       renderCell: (params) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <LocationOnIcon color="action" />
+          <LocationOnIcon sx={{ color: '#0083cb' }} />
           <Typography>{params.value}</Typography>
         </Box>
       ),
     },
     {
       field: 'status',
-      headerName: 'Status',
-      flex: 1,
+      headerName: 'Statut',
+      width: 130,
+      renderHeader: (params) => (
+        <Typography sx={{ fontWeight: 600, fontFamily: 'Signika' }}>
+          {params.colDef.headerName}
+        </Typography>
+      ),
       renderCell: (params) => (
-        <Chip 
-          label={params.value.charAt(0).toUpperCase() + params.value.slice(1)}
-          color={params.value === 'completed' ? 'success' : 'primary'}
-          variant="outlined"
+        <Chip
+          label={getStatusLabel(params.value)}
+          sx={{
+            backgroundColor: `${getStatusColor(params.value)}20`,
+            color: getStatusColor(params.value),
+            fontFamily: 'Signika',
+            '& .MuiChip-label': {
+              fontWeight: 500,
+            },
+          }}
         />
       ),
     },
     {
       field: 'actions',
       headerName: 'Actions',
-      flex: 1,
+      width: 120,
       sortable: false,
+      renderHeader: (params) => (
+        <Typography sx={{ fontWeight: 600, fontFamily: 'Signika' }}>
+          {params.colDef.headerName}
+        </Typography>
+      ),
       renderCell: (params) => (
         <Box>
-          <Tooltip title="Edit">
-            <IconButton onClick={() => handleEdit(params.row)}>
+          <Tooltip title="Modifier">
+            <IconButton
+              onClick={() => handleEdit(params.row)}
+              sx={{ color: '#0083cb' }}
+            >
               <EditIcon />
             </IconButton>
           </Tooltip>
-          {params.row.status === 'upcoming' && (
-            <Tooltip title="Mark as Completed">
-              <IconButton onClick={() => handleMarkCompleted(params.row.id)}>
-                <CheckCircleIcon />
-              </IconButton>
-            </Tooltip>
-          )}
-          <Tooltip title="Delete">
-            <IconButton onClick={() => handleDelete(params.row.id)}>
+          <Tooltip title="Supprimer">
+            <IconButton
+              onClick={() => handleDelete(params.row.id)}
+              sx={{ color: '#ed174c' }}
+            >
               <DeleteIcon />
             </IconButton>
           </Tooltip>
@@ -160,27 +202,51 @@ const SessionsList = () => {
   ];
 
   return (
-    <Box sx={{ height: 600, width: '100%' }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-        <Typography variant="h5" sx={{ fontFamily: 'Signika' }}>
+    <Box sx={{ height: '100%', width: '100%', p: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4" sx={{ fontFamily: 'Signika', fontWeight: 600 }}>
           Sessions
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleAdd}
-        >
-          New Session
-        </Button>
+        <AddButton onClick={handleAdd}>
+          Nouvelle Session
+        </AddButton>
       </Box>
+
       <DataGrid
         rows={sessions}
         columns={columns}
-        pageSize={10}
-        rowsPerPageOptions={[10]}
         loading={loading}
-        disableSelectionOnClick
+        checkboxSelection
+        disableRowSelectionOnClick
+        selectionModel={selectionModel}
+        onSelectionModelChange={(newSelectionModel) => {
+          setSelectionModel(newSelectionModel);
+        }}
+        sx={{
+          border: 'none',
+          backgroundColor: 'white',
+          borderRadius: '12px',
+          boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.05)',
+          '& .MuiDataGrid-cell': {
+            borderBottom: '1px solid #f0f0f0',
+            fontFamily: 'Signika',
+          },
+          '& .MuiDataGrid-columnHeaders': {
+            backgroundColor: '#f9fafb',
+            borderBottom: 'none',
+          },
+          '& .MuiDataGrid-columnHeaderTitle': {
+            fontWeight: 600,
+          },
+          '& .MuiCheckbox-root': {
+            color: '#0083cb',
+          },
+          '& .MuiCheckbox-root.Mui-checked': {
+            color: '#0083cb',
+          },
+        }}
       />
+
       <SessionDialog
         open={openDialog}
         onClose={handleDialogClose}

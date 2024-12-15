@@ -2,33 +2,29 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-  Button,
   IconButton,
   Avatar,
   Tooltip,
-  Checkbox,
-  TextField,
+  Chip,
 } from '@mui/material';
 import {
-  Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  DeleteSweep as DeleteSweepIcon,
+  AccountCircle as AccountCircleIcon,
+  KeyboardArrowDown as KeyboardArrowDownIcon,
 } from '@mui/icons-material';
 import { DataGrid } from '@mui/x-data-grid';
 import StudentDialog from '../../components/StudentDialog';
 import StudentProfileDialog from '../../components/StudentProfileDialog';
-
+import AddButton from '../../components/AddButton';
 import { getGroupColor } from '../../utils/colors';
 import { 
   getAllStudents, 
   updateStudent, 
   createStudent, 
   deleteStudent,
-  deleteStudents 
 } from '../../services/studentService';
 import { getAllGroups } from '../../services/groupService';
-import { useTheme } from '@mui/material/styles';
 
 const getInitials = (firstName = '', lastName = '') => {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
@@ -42,115 +38,95 @@ const StudentList = () => {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [selectionModel, setSelectionModel] = useState([]);
   const [groups, setGroups] = useState([]);
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    group: '',
-    birthDate: '',
-  });
-  const theme = useTheme();
+  const [loading, setLoading] = useState(true);
+  const [anchorEl, setAnchorEl] = useState(null);
 
-  const loadStudents = async () => {
+  const loadData = async () => {
     try {
-      const studentsData = await getAllStudents();
-      setRows(studentsData.map(student => ({
-        ...student,
-        groups: student.groups || 'No Groups'
-      })));
-    } catch (error) {
-      console.error('Error loading students:', error);
-    }
-  };
-
-  const loadGroups = async () => {
-    try {
-      const groupsData = await getAllGroups();
+      setLoading(true);
+      const [studentsData, groupsData] = await Promise.all([
+        getAllStudents(),
+        getAllGroups()
+      ]);
+      setRows(studentsData);
       setGroups(groupsData);
     } catch (error) {
-      console.error('Error loading groups:', error);
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadStudents();
-    loadGroups();
+    loadData();
   }, []);
 
-  const handleSubmit = async (studentData) => {
-    try {
-      if (editingStudent) {
-        await updateStudent(editingStudent.id, studentData);
-      } else {
-        await createStudent(studentData);
-      }
-      loadStudents();
-      setOpenDialog(false);
-      setEditingStudent(null);
-    } catch (error) {
-      console.error('Error submitting student:', error);
-    }
+  const handleAdd = () => {
+    setEditingStudent(null);
+    setOpenDialog(true);
   };
 
   const handleEdit = (student) => {
     setEditingStudent(student);
-    setFormData({
-      firstName: student.firstName,
-      lastName: student.lastName,
-      group: student.group,
-      birthDate: student.birthDate,
-    });
-    setOpenDialog(true);
-  };
-
-  const handleAdd = () => {
-    setEditingStudent(null);
-    setFormData({
-      firstName: '',
-      lastName: '',
-      group: '',
-      birthDate: '',
-    });
     setOpenDialog(true);
   };
 
   const handleDelete = async (id) => {
-    try {
-      await deleteStudent(id);
-      loadStudents();
-    } catch (error) {
-      console.error('Error deleting student:', error);
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cet élève ?')) {
+      try {
+        await deleteStudent(id);
+        loadData();
+      } catch (error) {
+        console.error('Error deleting student:', error);
+      }
     }
   };
 
-  const handleDeleteSelected = async () => {
-    try {
-      await deleteStudents(selectionModel);
-      setSelectionModel([]);
-      loadStudents();
-    } catch (error) {
-      console.error('Error deleting students:', error);
+  const handleDialogClose = (saved) => {
+    setOpenDialog(false);
+    if (saved) {
+      loadData();
     }
   };
 
-  const handleRowClick = (params) => {
-    setSelectedStudent(params.row);
+  const handleProfileClose = () => {
+    setOpenProfile(false);
+    setSelectedStudent(null);
+  };
+
+  const handleViewProfile = (student) => {
+    setSelectedStudent(student);
     setOpenProfile(true);
+  };
+
+  const handleLoginClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleLoginClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLogout = () => {
+    // Add logout logic here
+    handleLoginClose();
   };
 
   const columns = [
     {
       field: 'avatar',
       headerName: '',
-      width: 50,
+      width: 60,
       sortable: false,
-      filterable: false,
       renderCell: (params) => (
         <Avatar
-          src={params.value}
+          onClick={() => handleViewProfile(params.row)}
           sx={{
-            width: 32,
-            height: 32,
-            bgcolor: params.row.color || theme.palette.primary.main,
+            bgcolor: '#0083cb',
+            cursor: 'pointer',
+            '&:hover': {
+              opacity: 0.8,
+            },
           }}
         >
           {getInitials(params.row.firstName, params.row.lastName)}
@@ -161,87 +137,93 @@ const StudentList = () => {
       field: 'firstName',
       headerName: 'Prénom',
       flex: 1,
-      minWidth: 130,
+      renderHeader: (params) => (
+        <Typography sx={{ fontWeight: 600, fontFamily: 'Signika' }}>
+          {params.colDef.headerName}
+        </Typography>
+      ),
       renderCell: (params) => (
-        <Box sx={{ pl: 1 }}>
-          <Typography sx={{ fontFamily: 'Signika Light' }}>
-            {params.value}
-          </Typography>
-        </Box>
+        <Typography sx={{ fontFamily: 'Signika' }}>{params.value}</Typography>
       ),
     },
     {
       field: 'lastName',
       headerName: 'Nom',
       flex: 1,
-      headerAlign: 'center',
-      align: 'center',
-      renderCell: (params) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-          <Typography sx={{ fontFamily: 'Signika Light' }}>
-            {params.value}
-          </Typography>
-        </Box>
+      renderHeader: (params) => (
+        <Typography sx={{ fontWeight: 600, fontFamily: 'Signika' }}>
+          {params.colDef.headerName}
+        </Typography>
       ),
-    },
-    {
-      field: 'groups',
-      headerName: 'Groupe',
-      flex: 1,
-      headerAlign: 'center',
-      align: 'center',
       renderCell: (params) => (
-
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-          <Typography>
-            {params.value}
-          </Typography>
-        </Box>
+        <Typography sx={{ fontFamily: 'Signika' }}>{params.value}</Typography>
       ),
     },
     {
       field: 'birthDate',
       headerName: 'Date de naissance',
       flex: 1,
-      headerAlign: 'center',
-      align: 'center',
-      valueFormatter: (params) => new Date(params.value).toLocaleDateString('fr-FR'),
-      renderCell: (params) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-          <Typography sx={{ fontFamily: 'Signika Light' }}>
-            {new Date(params.value).toLocaleDateString('fr-FR')}
-          </Typography>
-        </Box>
+      renderHeader: (params) => (
+        <Typography sx={{ fontWeight: 600, fontFamily: 'Signika' }}>
+          {params.colDef.headerName}
+        </Typography>
       ),
+      renderCell: (params) => (
+        <Typography sx={{ fontFamily: 'Signika' }}>
+          {new Date(params.value).toLocaleDateString('fr-FR')}
+        </Typography>
+      ),
+    },
+    {
+      field: 'group',
+      headerName: 'Groupe',
+      flex: 1,
+      renderHeader: (params) => (
+        <Typography sx={{ fontWeight: 600, fontFamily: 'Signika' }}>
+          {params.colDef.headerName}
+        </Typography>
+      ),
+      renderCell: (params) => {
+        const group = groups.find(g => g.id === params.value);
+        return group ? (
+          <Chip
+            label={group.name}
+            sx={{
+              backgroundColor: '#0083cb20',
+              color: '#0083cb',
+              fontFamily: 'Signika',
+              '& .MuiChip-label': {
+                fontWeight: 500,
+              },
+            }}
+          />
+        ) : null;
+      },
     },
     {
       field: 'actions',
       headerName: 'Actions',
       width: 120,
       sortable: false,
-      filterable: false,
+      renderHeader: (params) => (
+        <Typography sx={{ fontWeight: 600, fontFamily: 'Signika' }}>
+          {params.colDef.headerName}
+        </Typography>
+      ),
       renderCell: (params) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', gap: 1 }}>
+        <Box>
           <Tooltip title="Modifier">
             <IconButton
-              onClick={(e) => {
-                e.stopPropagation();
-                handleEdit(params.row);
-              }}
-              size="small"
-              sx={{ color: theme.palette.primary.main }}
+              onClick={() => handleEdit(params.row)}
+              sx={{ color: '#0083cb' }}
             >
               <EditIcon />
             </IconButton>
           </Tooltip>
           <Tooltip title="Supprimer">
             <IconButton
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDelete(params.row.id);
-              }}
-              size="small"
-              sx={{ color: theme.palette.error.main }}
+              onClick={() => handleDelete(params.row.id)}
+              sx={{ color: '#ed174c' }}
             >
               <DeleteIcon />
             </IconButton>
@@ -252,113 +234,75 @@ const StudentList = () => {
   ];
 
   return (
+    <Box sx={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ p: 3 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          mb: 3,
+          gap: 2 
+        }}>
+          <Typography variant="h4" sx={{ fontFamily: 'Signika', fontWeight: 600 }}>
+            Élèves
+          </Typography>
 
-    <Box sx={{ 
-      height: '100%', 
-      width: '100%', 
-      display: 'flex',
-      flexDirection: 'column',
-    }}>
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        px: 3,
-        py: 2,
-        borderBottom: '1px solid #f0f0f0',
-        backgroundColor: '#fff',
-      }}>
-        <Typography 
-          variant="h4" 
-          sx={{ 
-            color: theme.palette.primary.main, 
-            fontWeight: 600, 
-            fontFamily: 'Signika',
-            fontSize: { xs: '1.8rem', sm: '2.2rem', md: '2.5rem' },
-          }}
-        >
-          Gestion des Enfants
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          {selectionModel.length > 0 && (
-            <Button
-              variant="contained"
-              startIcon={<DeleteSweepIcon />}
-              onClick={handleDeleteSelected}
-              sx={{
-                backgroundColor: theme.palette.error.main,
-                borderRadius: '25px',
-                padding: '10px 24px',
-                '&:hover': {
-                  backgroundColor: theme.palette.error.dark,
-                },
-              }}
-            >
-              Supprimer ({selectionModel.length})
-            </Button>
-          )}
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleAdd}
+          <AddButton onClick={handleAdd}>
+            Nouvel Élève
+          </AddButton>
+        </Box>
+
+        <Box sx={{ flex: 1, minHeight: 0 }}>
+          <DataGrid
+            rows={rows}
+            columns={columns}
+            loading={loading}
+            checkboxSelection
+            disableRowSelectionOnClick
+            selectionModel={selectionModel}
+            onSelectionModelChange={(newSelectionModel) => {
+              setSelectionModel(newSelectionModel);
+            }}
             sx={{
-              backgroundColor: theme.palette.primary.main,
-              borderRadius: '25px',
-              padding: '10px 24px',
-              '&:hover': {
-                backgroundColor: theme.palette.primary.dark,
+              height: '100%',
+              border: 'none',
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.05)',
+              '& .MuiDataGrid-cell': {
+                borderBottom: '1px solid #f0f0f0',
+                fontFamily: 'Signika',
+              },
+              '& .MuiDataGrid-columnHeaders': {
+                backgroundColor: '#f9fafb',
+                borderBottom: 'none',
+              },
+              '& .MuiDataGrid-columnHeaderTitle': {
+                fontWeight: 600,
+              },
+              '& .MuiCheckbox-root': {
+                color: '#0083cb',
+              },
+              '& .MuiCheckbox-root.Mui-checked': {
+                color: '#0083cb',
               },
             }}
-          >
-            Ajouter un Enfant
-          </Button>
+          />
         </Box>
-      </Box>
 
-      <Box sx={{ 
-        flexGrow: 1,
-        width: '100%',
-        px: 3,
-        py: 2,
-      }}>
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          pageSize={10}
-          rowsPerPageOptions={[10]}
-          checkboxSelection
-          disableSelectionOnClick
-          onSelectionModelChange={(newSelectionModel) => {
-            setSelectionModel(newSelectionModel);
-          }}
-          selectionModel={selectionModel}
-          onRowClick={handleRowClick}
-          autoHeight
-        />
-      </Box>
-
-      {openDialog && (
         <StudentDialog
           open={openDialog}
-          onClose={() => {
-            setOpenDialog(false);
-            setEditingStudent(null);
-          }}
+          onClose={handleDialogClose}
           student={editingStudent}
-          onSubmit={handleSubmit}
+          groups={groups}
         />
-      )}
 
-      {openProfile && selectedStudent && (
         <StudentProfileDialog
           open={openProfile}
-          onClose={() => {
-            setOpenProfile(false);
-            setSelectedStudent(null);
-          }}
+          onClose={handleProfileClose}
           student={selectedStudent}
         />
-      )}
+      </Box>
     </Box>
   );
 };

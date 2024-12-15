@@ -1,6 +1,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { CacheProvider } from '@emotion/react';
+import createCache from '@emotion/cache';
 import App from './App';
+
+// Create emotion cache
+const cache = createCache({
+  key: 'css',
+  prepend: true,
+});
 
 // Import Signika font
 const link = document.createElement('link');
@@ -11,6 +19,8 @@ document.head.appendChild(link);
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    <CacheProvider value={cache}>
+      <App />
+    </CacheProvider>
   </React.StrictMode>
 );
