@@ -1,6 +1,6 @@
 import initialData from '../data/data.json';
 
-const API_BASE_URL = 'http://localhost:4005/api';
+const API_BASE_URL = 'http://localhost:3001/api';
 
 export const handleResponse = async (response) => {
   if (!response.ok) {
@@ -73,11 +73,6 @@ export const getData = async () => {
 export const writeData = async (newData) => {
   try {
     return await apiPut('/data', newData);
-  } catch (error) {
-    console.error('Error writing data:', error);
-    return false;
-  }
-};
   } catch (error) {
     console.error('Error writing data:', error);
     return false;

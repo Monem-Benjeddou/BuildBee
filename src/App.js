@@ -14,6 +14,7 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
 import GroupList from './pages/Groups/List';
+import Programs from './components/Programs';
 import { saveCurrentRoute } from './utils/routeUtils';
 
 // Placeholder components for other routes
@@ -128,7 +129,9 @@ function App() {
             } />
             <Route path="/programs" element={
               <ProtectedRoute>
-                <Programs />
+                <Layout>
+                  <Programs />
+                </Layout>
               </ProtectedRoute>
             } />
             
