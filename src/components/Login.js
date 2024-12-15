@@ -66,83 +66,98 @@ function Login() {
 
   return (
     <div className="auth-container">
-      <img 
-        src={authImg1}
-        alt="Background Left" 
-        className="auth-bg-left"
-      />
-      <img 
-        src={authImg2}
-        alt="Background Right" 
-        className="auth-bg-right"
-      />
-      <form className="auth-form" style={{ top: '270px' }} onSubmit={handleSubmit}>
-        <h1 className="auth-title">Log in</h1>
-        
-        <div className="auth-form-content">
-          <button type="button" className="google-button">
-            <GoogleIcon style={{ color: '#4285F4' }} />
-            <span style={{ color: '#525961', fontSize: '20px', fontFamily: 'Signika' }}>
-              Get started with Google
-            </span>
-          </button>
-
-          <div className="divider">
-            <div className="divider-line"></div>
-            <span className="divider-text">Or</span>
-            <div className="divider-line"></div>
+      <div className="auth-logo-container">
+        <div className="auth-logo-wrapper">
+          <div className="auth-logo-icon">
+            <div className="auth-logo-dots">
+              <div className="auth-logo-dot"></div>
+              <div className="auth-logo-dot"></div>
+            </div>
+            <div className="auth-logo-bar"></div>
           </div>
+          <div className="auth-logo-text">
+            <div className="auth-logo-title">LOGO</div>
+            <div className="auth-logo-slogan">YOUR SLOGAN HERE</div>
+          </div>
+        </div>
+      </div>
+      <div className="auth-content">
+        <img 
+          src={authImg1}
+          alt="Background Left" 
+          className="auth-bg-left"
+        />
+        <img 
+          src={authImg2}
+          alt="Background Right" 
+          className="auth-bg-right"
+        />
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <h1 className="auth-title">Log in</h1>
+        
+          <div className="auth-form-content">
+            <button type="button" className="google-button">
+              <GoogleIcon style={{ color: '#4285F4' }} />
+              <span className="google-button-text">
+                Get started with Google
+              </span>
+            </button>
 
-          <input
-            type="email"
-            name="email"
-            className="auth-input"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleInputChange}
-          />
+            <div className="divider">
+              <div className="divider-line"></div>
+              <span className="divider-text">Or</span>
+              <div className="divider-line"></div>
+            </div>
 
-          <div className="password-input-container">
             <input
-              type={showPassword ? 'text' : 'password'}
-              name="password"
+              type="email"
+              name="email"
               className="auth-input"
-              placeholder="Password"
-              value={formData.password}
+              placeholder="Email"
+              value={formData.email}
               onChange={handleInputChange}
             />
-            <IconButton
-              onClick={() => setShowPassword(!showPassword)}
-              edge="end"
-            >
-              {showPassword ? <VisibilityOff /> : <Visibility />}
-            </IconButton>
+
+            <div className="password-input-container">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                className="auth-input"
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleInputChange}
+              />
+              <IconButton
+                onClick={() => setShowPassword(!showPassword)}
+                edge="end"
+              >
+                {showPassword ? <VisibilityOff /> : <Visibility />}
+              </IconButton>
+            </div>
+
+            <Link to="/forgot-password" className="auth-link" style={{ alignSelf: 'flex-end' }}>
+              Forgot password?
+            </Link>
           </div>
 
-          <Link to="/forgot-password" style={{ alignSelf: 'flex-end', textDecoration: 'none' }}>
-            <span style={{ color: '#152D48', fontSize: '16px', fontFamily: 'Signika' }}>
-              Forgot password?
-            </span>
-          </Link>
-        </div>
+          <button type="submit" className="auth-button">
+            Continue
+          </button>
 
-        <button type="submit" className="auth-button">
-          Continue
-        </button>
-
-        <div className="auth-footer">
-          Don't have an account?{' '}
-          <Link to="/register" className="auth-link">
-            Sign up
-          </Link>
-        </div>
-      </form>
-      <Notification
-        open={notification.open}
-        message={notification.message}
-        severity={notification.severity}
-        onClose={handleCloseNotification}
-      />
+          <div className="auth-footer">
+            Don't have an account?{' '}
+            <Link to="/register" className="auth-link">
+              Sign up
+            </Link>
+          </div>
+        </form>
+        <Notification
+          open={notification.open}
+          message={notification.message}
+          severity={notification.severity}
+          onClose={handleCloseNotification}
+        />
+      </div>
     </div>
   );
 }

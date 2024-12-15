@@ -9,6 +9,76 @@ body {
   position: relative;
   background: white;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-logo-container {
+  padding: 32px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 10px;
+  display: inline-flex;
+}
+
+.auth-logo-wrapper {
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 6.25px;
+  display: inline-flex;
+}
+
+.auth-logo-icon {
+  height: 62px;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  display: flex;
+}
+
+.auth-logo-dots {
+  width: 49px;
+  opacity: 0.60;
+  justify-content: space-between;
+  align-items: center;
+  display: inline-flex;
+}
+
+.auth-logo-dot {
+  width: 15px;
+  height: 8px;
+  background: #ED174C;
+}
+
+.auth-logo-bar {
+  align-self: stretch;
+  height: 54px;
+  background: #ED174C;
+}
+
+.auth-logo-text {
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 2px;
+  display: flex;
+}
+
+.auth-logo-title {
+  color: black;
+  font-size: 11.72px;
+  font-family: Hind;
+  font-weight: 400;
+  word-wrap: break-word;
+}
+
+.auth-logo-slogan {
+  color: black;
+  font-size: 4.69px;
+  font-family: Hind;
+  font-weight: 400;
+  word-wrap: break-word;
 }
 
 .auth-bg-left {
@@ -33,13 +103,13 @@ body {
 .auth-form {
   position: absolute;
   left: 50%;
-  transform: translateX(-50%);
+  top: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 24px;
   width: 450px;
-  position: relative;
   z-index: 1;
 }
 
@@ -49,6 +119,7 @@ body {
   font-family: Signika;
   font-weight: 400;
   line-height: 37.20px;
+  text-align: center;
 }
 
 .auth-subtitle {
@@ -85,6 +156,12 @@ body {
 
 .google-button:hover {
   background: #f5f5f5;
+}
+
+.google-button-text {
+  color: #525961;
+  font-size: 20px;
+  font-family: Signika;
 }
 
 .divider {
@@ -151,52 +228,51 @@ body {
 
 .auth-button {
   width: 100%;
-  padding: 16px 22px;
+  height: 56px;
   background: #0083CB;
   border-radius: 50px;
-  border: 1px solid #0083CB;
+  border: none;
   color: white;
-  font-size: 16px;
+  font-size: 20px;
   font-family: Signika;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .auth-button:hover {
-  background: #006ca8;
+  background: #006ba3;
+}
+
+.auth-footer {
+  color: #919EAB;
+  font-size: 16px;
+  font-family: Signika;
+  text-align: center;
 }
 
 .auth-link {
-  color: #8DC63F;
-  font-size: 18px;
-  font-family: Public Sans;
-  font-weight: 500;
+  color: #0083CB;
   text-decoration: none;
-  cursor: pointer;
+  font-weight: 500;
 }
 
 .auth-link:hover {
   text-decoration: underline;
 }
 
-.auth-footer {
-  text-align: center;
-  color: #7B7F84;
-  font-size: 18px;
-  font-family: Public Sans;
-  font-weight: 500;
-  line-height: 30px;
-}
-
 .auth-terms {
-  font-size: 18px;
-  line-height: 30px;
   text-align: center;
+  color: #979CA1;
+  font-size: 14px;
+  font-family: Signika;
 }
 
 .auth-terms-link {
-  color: #8DC63F;
-  font-family: Poppins;
+  color: #0083CB;
+  text-decoration: none;
+}
+
+.auth-terms-link:hover {
   text-decoration: underline;
 }
 
@@ -207,12 +283,27 @@ body {
   color: #152D48;
   font-size: 16px;
   font-family: Signika;
-  cursor: pointer;
-  padding: 6px 8px;
-  border-radius: 8px;
-  transition: all 0.3s ease;
+  text-decoration: none;
 }
 
 .back-to-login:hover {
-  background: rgba(21, 45, 72, 0.1);
+  color: #0083CB;
+}
+
+.auth-terms-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+
+.auth-terms-links {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.auth-terms-separator {
+  color: #979CA1;
 }

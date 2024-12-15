@@ -16,43 +16,60 @@ function ForgotPassword() {
 
   return (
     <div className="auth-container">
-      <img 
-        src={authImg1}
-        alt="Background Left" 
-        className="auth-bg-left"
-      />
-      <img 
-        src={authImg2}
-        alt="Background Right" 
-        className="auth-bg-right"
-      />
-      <form className="auth-form" style={{ top: '270px' }} onSubmit={handleSubmit}>
-        <div style={{ textAlign: 'center' }}>
-          <h1 className="auth-title">Forgot your password?</h1>
-          <p className="auth-subtitle">
-            Please enter the email address associated with your account and we will email you a link to reset your password
-          </p>
+      <div className="auth-logo-container">
+        <div className="auth-logo-wrapper">
+          <div className="auth-logo-icon">
+            <div className="auth-logo-dots">
+              <div className="auth-logo-dot"></div>
+              <div className="auth-logo-dot"></div>
+            </div>
+            <div className="auth-logo-bar"></div>
+          </div>
+          <div className="auth-logo-text">
+            <div className="auth-logo-title">LOGO</div>
+            <div className="auth-logo-slogan">YOUR SLOGAN HERE</div>
+          </div>
         </div>
+      </div>
+      <div className="auth-content">
+        <img 
+          src={authImg1}
+          alt="Background Left" 
+          className="auth-bg-left"
+        />
+        <img 
+          src={authImg2}
+          alt="Background Right" 
+          className="auth-bg-right"
+        />
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <div style={{ textAlign: 'center' }}>
+            <h1 className="auth-title">Forgot your password?</h1>
+            <p className="auth-subtitle">
+              Please enter the email address associated with your account and we will email you a link to reset your password
+            </p>
+          </div>
 
-        <div className="auth-form-content">
-          <input
-            type="email"
-            className="auth-input"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+          <div className="auth-form-content">
+            <input
+              type="email"
+              className="auth-input"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
 
-          <button type="submit" className="auth-button">
-            Send me reset link
-          </button>
-        </div>
+            <button type="submit" className="auth-button">
+              Send me reset link
+            </button>
+          </div>
 
-        <Link to="/login" className="back-to-login">
-          <ArrowBackIcon />
-          Return to sign in
-        </Link>
-      </form>
+          <Link to="/login" className="back-to-login">
+            <ArrowBackIcon />
+            Return to sign in
+          </Link>
+        </form>
+      </div>
     </div>
   );
 }

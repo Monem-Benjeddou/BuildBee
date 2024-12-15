@@ -30,64 +30,81 @@ function ResetPassword() {
 
   return (
     <div className="auth-container">
-      <img 
-        src={authImg1}
-        alt="Background Left" 
-        className="auth-bg-left"
-      />
-      <img 
-        src={authImg2}
-        alt="Background Right" 
-        className="auth-bg-right"
-      />
-      <form className="auth-form" style={{ top: '270px' }} onSubmit={handleSubmit}>
-        <h1 className="auth-title">Reset password</h1>
-
-        <div className="auth-form-content">
-          <div className="password-input-container">
-            <input
-              type={showPassword ? 'text' : 'password'}
-              name="password"
-              className="auth-input"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleInputChange}
-            />
-            <IconButton
-              className="password-toggle"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? <VisibilityOff /> : <Visibility />}
-            </IconButton>
+      <div className="auth-logo-container">
+        <div className="auth-logo-wrapper">
+          <div className="auth-logo-icon">
+            <div className="auth-logo-dots">
+              <div className="auth-logo-dot"></div>
+              <div className="auth-logo-dot"></div>
+            </div>
+            <div className="auth-logo-bar"></div>
           </div>
-
-          <div className="password-input-container">
-            <input
-              type={showConfirmPassword ? 'text' : 'password'}
-              name="confirmPassword"
-              className="auth-input"
-              placeholder="Confirm password"
-              value={formData.confirmPassword}
-              onChange={handleInputChange}
-            />
-            <IconButton
-              className="password-toggle"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            >
-              {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-            </IconButton>
+          <div className="auth-logo-text">
+            <div className="auth-logo-title">LOGO</div>
+            <div className="auth-logo-slogan">YOUR SLOGAN HERE</div>
           </div>
-
-          <button type="submit" className="auth-button">
-            Submit
-          </button>
         </div>
+      </div>
+      <div className="auth-content">
+        <img 
+          src={authImg1}
+          alt="Background Left" 
+          className="auth-bg-left"
+        />
+        <img 
+          src={authImg2}
+          alt="Background Right" 
+          className="auth-bg-right"
+        />
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <h1 className="auth-title">Reset password</h1>
 
-        <Link to="/login" className="back-to-login">
-          <ArrowBackIcon />
-          Return to sign in
-        </Link>
-      </form>
+          <div className="auth-form-content">
+            <div className="password-input-container">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                className="auth-input"
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleInputChange}
+              />
+              <IconButton
+                className="password-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <VisibilityOff /> : <Visibility />}
+              </IconButton>
+            </div>
+
+            <div className="password-input-container">
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                name="confirmPassword"
+                className="auth-input"
+                placeholder="Confirm password"
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+              />
+              <IconButton
+                className="password-toggle"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+              </IconButton>
+            </div>
+
+            <button type="submit" className="auth-button">
+              Submit
+            </button>
+          </div>
+
+          <Link to="/login" className="back-to-login">
+            <ArrowBackIcon />
+            Return to sign in
+          </Link>
+        </form>
+      </div>
     </div>
   );
 }
